@@ -62,14 +62,14 @@ export const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ bookin
         {/* Header */}
         <h3 id="booking-details-title" className="text-xl font-extrabold text-gray-900 mb-5 pr-1">بطاقة تفاصيل عميل CRM</h3>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-0.5">
           {/* Customer Name */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="flex items-center gap-3.5 p-3.5 bg-neutral-50 rounded-2xl border border-neutral-100">
               <FiUser className="w-5 h-5 text-gray-400" />
               <div className="flex flex-col">
                 <span className="text-[10px] text-gray-400 font-bold leading-none">اسم العميل</span>
-                <span className="text-sm font-extrabold text-gray-800 mt-1.5">{booking.customer_name}</span>
+                <span className="text-sm font-extrabold text-gray-800 leading-normal">{booking.customer_name}</span>
               </div>
             </div>
 
