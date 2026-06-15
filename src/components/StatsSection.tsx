@@ -115,7 +115,7 @@ export const StatsSection: React.FC<StatsSectionProps> = ({ bookings }) => {
             className="premium-card p-4 flex flex-col justify-between min-h-[120px] relative overflow-hidden"
           >
             <div className="flex justify-between items-start z-10">
-              <span className="text-[11px] font-bold text-gray-500">{stat.title}</span>
+              <span className="text-[13px] font-black text-gray-600">{stat.title}</span>
               <div 
                 className="p-2 rounded-xl"
                 style={{ backgroundColor: `${stat.color}15` }}
@@ -124,7 +124,7 @@ export const StatsSection: React.FC<StatsSectionProps> = ({ bookings }) => {
               </div>
             </div>
             <div className="mt-2 z-10 flex items-baseline justify-between">
-              <span className="text-2xl font-black text-gray-900">
+              <span className="text-3xl font-black text-gray-900">
                 <CountUp value={stat.value} />
               </span>
             </div>
@@ -145,13 +145,13 @@ export const StatsSection: React.FC<StatsSectionProps> = ({ bookings }) => {
             className="premium-card p-4 flex flex-col justify-between min-h-[120px] border-[#F4C542]/30 bg-[#F4C542]/3 relative overflow-hidden"
           >
             <div className="flex justify-between items-start z-10">
-              <span className="text-[11px] font-bold text-gray-700">{stat.title}</span>
+              <span className="text-[13px] font-black text-gray-800">{stat.title}</span>
               <div className="p-2 rounded-xl bg-[#F4C542]/15 text-[#D4A017]">
                 {stat.icon}
               </div>
             </div>
             <div className="mt-2 z-10">
-              <span className="text-2xl font-black text-amber-950">
+              <span className="text-3xl font-black text-amber-950">
                 <CountUp value={stat.value} />
               </span>
             </div>

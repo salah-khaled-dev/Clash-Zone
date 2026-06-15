@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiSearch, FiRotateCcw, FiFilter } from 'react-icons/fi';
+import { FiSearch, FiRotateCcw, FiFilter, FiShare2 } from 'react-icons/fi';
 import { translateService, translateStatus, translateBranch } from '../utils/translations';
 
 interface FilterToolbarProps {
@@ -14,6 +14,7 @@ interface FilterToolbarProps {
   dateFilter: string;
   onDateChange: (date: string) => void;
   onClearFilters: () => void;
+  onExport: () => void;
 }
 
 export const FilterToolbar: React.FC<FilterToolbarProps> = ({
@@ -28,6 +29,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
   dateFilter,
   onDateChange,
   onClearFilters,
+  onExport,
 }) => {
   // Calculate active filters count
   const activeFiltersCount = [
@@ -55,8 +57,8 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
           />
         </div>
 
-        {/* Filters Count & Clear Button */}
-        <div className="flex items-center gap-4 justify-end">
+        {/* Filters Count & Action Buttons */}
+        <div className="flex items-center gap-2.5 justify-end">
           {activeFiltersCount > 0 && (
             <span className="text-xs font-bold text-amber-800 bg-amber-50 px-3 h-10 rounded-xl border border-amber-200/40 flex items-center gap-1.5 animate-pulse">
               <FiFilter className="w-4 h-4 text-[#D4A017]" />
@@ -74,6 +76,16 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
               <span>إعادة تعيين</span>
             </button>
           )}
+
+          {/* Export CSV Button */}
+          <button
+            type="button"
+            onClick={onExport}
+            className="flex items-center gap-1.5 px-4 h-11 text-xs font-bold bg-[#F4C542] hover:bg-[#E8B923] text-gray-900 border border-[#F4C542]/20 rounded-xl transition-all outline-none cursor-pointer shadow-sm hover:shadow-[#F4C542]/15"
+          >
+            <FiShare2 className="w-4 h-4" />
+            <span>تصدير البيانات (CSV)</span>
+          </button>
         </div>
       </div>
 

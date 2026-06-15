@@ -16,6 +16,9 @@ import { BookingCardSkeleton, StatsSkeleton } from './components/LoadingSkeleton
 import { ToastProvider, useToast } from './components/ToastProvider';
 import { Logo } from './components/Logo';
 import { formatArabicDate, formatArabicTime, formatVehicleName } from './utils/bookingFormatters';
+import { CalendarView } from './components/CalendarView';
+import { LoginScreen } from './components/LoginScreen';
+import { SignatureFooter } from './components/SignatureFooter';
 
 type ModalState = 
   | { type: 'details'; booking: Booking }
@@ -41,6 +44,28 @@ const MainAppContent: React.FC = () => {
   // Unified Overlays State
   const [activeModal, setActiveModal] = useState<ModalState>(null);
 
+  // View Mode: list vs calendar
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+
+  // Supabase Auth states
+  const [session, setSession] = useState<any>(null);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+
+  // Check Supabase Auth Session on startup and listen to updates
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setIsCheckingSession(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setIsCheckingSession(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   // Fetch bookings from Supabase
   const fetchBookings = useCallback(async () => {
     setIsLoading(true);
@@ -57,6 +82,8 @@ const MainAppContent: React.FC = () => {
 
   // Load bookings and set up Supabase Realtime
   useEffect(() => {
+    if (!session) return;
+
     fetchBookings();
 
     // Setup Postgres Realtime Channel with Incremental State Updates
@@ -113,7 +140,7 @@ const MainAppContent: React.FC = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchBookings]);
+  }, [fetchBookings, session]);
 
   // Actions
   const handleConfirmBooking = useCallback(async (booking: Booking) => {
@@ -192,6 +219,32 @@ const MainAppContent: React.FC = () => {
     }
   }, [showToast]);
 
+  // Handle Drag & Drop Reschedule in Calendar View
+  const handleReschedule = useCallback(async (booking: Booking, newDate: string, newSlot: string) => {
+    // Check if target slot is already occupied (excluding the booking itself and cancelled ones)
+    const isOccupied = bookings.some(
+      b => b.id !== booking.id && 
+           b.booking_date === newDate && 
+           b.time_slot === newSlot && 
+           b.status !== 'ملغي'
+    );
+
+    if (isOccupied) {
+      showToast("هذا الموعد محجوز لعميل آخر بالفعل! يرجى اختيار موعد متاح.", "error");
+      return;
+    }
+
+    try {
+      await bookingsService.updateBooking(booking.id, {
+        booking_date: newDate,
+        time_slot: newSlot
+      });
+      showToast(`تم إعادة جدولة حجز العميل ${booking.customer_name} بنجاح`, "success");
+    } catch (err) {
+      showToast("فشلت عملية إعادة جدولة حجز العميل", "error");
+    }
+  }, [bookings, showToast]);
+
   // Date constants
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
   const next7DaysStr = useMemo(() => {
@@ -249,6 +302,97 @@ const MainAppContent: React.FC = () => {
     showToast("تم إعادة تعيين الفلاتر بنجاح", "success");
   }, [showToast]);
 
+  // Export Bookings Database to CSV (with Arabic Excel compatibility UTF-8 BOM)
+  const handleExportCSV = useCallback(() => {
+    if (filteredBookings.length === 0) {
+      showToast("لا توجد بيانات حجوزات لتصديرها حالياً", "warning");
+      return;
+    }
+
+    const headers = [
+      "اسم العميل الكامل",
+      "رقم الجوال",
+      "مصدر الاستقطاب",
+      "فئة العميل",
+      "الخدمة المطلوبة",
+      "تاريخ الحجز",
+      "الموعد المحدد",
+      "الفرع المعتمد",
+      "حالة الحجز",
+      "تاريخ آخر تواصل",
+      "تاريخ المتابعة القادمة",
+      "ملاحظات المتابعة"
+    ];
+
+    const escapeCSVField = (val: string | null | undefined) => {
+      if (val === null || val === undefined) return "";
+      const str = String(val);
+      if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const formatDateOnly = (isoStr: string | null) => {
+      if (!isoStr) return "";
+      return isoStr.split('T')[0];
+    };
+
+    const translateClientType = (type: string) => {
+      switch (type) {
+        case 'new': return 'عميل جديد';
+        case 'returning': return 'عميل سابق';
+        case 'vip': return 'عميل VIP';
+        case 'referred': return 'عميل محول';
+        default: return type;
+      }
+    };
+
+    const csvRows = [headers.join(",")];
+
+    filteredBookings.forEach((b) => {
+      const row = [
+        escapeCSVField(b.customer_name),
+        escapeCSVField(b.customer_phone),
+        escapeCSVField(b.customer_source),
+        escapeCSVField(translateClientType(b.customer_type)),
+        escapeCSVField(b.service_type),
+        escapeCSVField(b.booking_date),
+        escapeCSVField(b.time_slot),
+        escapeCSVField(b.branch_name),
+        escapeCSVField(b.status),
+        escapeCSVField(formatDateOnly(b.last_contact_date)),
+        escapeCSVField(formatDateOnly(b.next_followup_date)),
+        escapeCSVField(b.notes)
+      ];
+      csvRows.push(row.join(","));
+    });
+
+    const csvContent = csvRows.join("\n");
+    const bom = "\uFEFF"; // Prepend BOM for Excel Arabic support
+    const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `infinity_bright_bookings_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showToast("تم تصدير ملف الحجوزات بنجاح", "success");
+  }, [filteredBookings, showToast]);
+
+  // Supabase Auth sign out
+  const handleLogout = useCallback(async () => {
+    try {
+      await supabase.auth.signOut();
+      showToast("تم تسجيل الخروج بنجاح", "success");
+    } catch (err) {
+      showToast("فشلت عملية تسجيل الخروج", "error");
+    }
+  }, [showToast]);
+
   const handleViewMyBooking = useCallback(() => {
     if (activeModal && activeModal.type === 'success') {
       setActiveModal({ type: 'details', booking: activeModal.booking });
@@ -276,6 +420,22 @@ const MainAppContent: React.FC = () => {
     return `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
   };
 
+  // Auth gate checks
+  if (isCheckingSession) {
+    return (
+      <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center" dir="rtl">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-[#F4C542] border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-bold text-gray-500">جاري التحقق من الجلسة...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <LoginScreen onLoginSuccess={() => {}} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#FAFAF8] pb-16 pt-6 w-full relative">
       {/* Ambient backgrounds meshes */}
@@ -294,6 +454,13 @@ const MainAppContent: React.FC = () => {
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>نظام إدارة العملاء CRM v3.0</span>
             </div>
+            
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2.5 text-xs font-bold text-rose-600 hover:text-white bg-white hover:bg-rose-500 border border-rose-200 hover:border-rose-500 rounded-2xl shadow-sm transition-all cursor-pointer outline-none"
+            >
+              تسجيل الخروج
+            </button>
           </div>
         </header>
 
@@ -410,9 +577,37 @@ const MainAppContent: React.FC = () => {
 
         {/* 5. Main Bookings List & Controls */}
         <div className="w-full flex flex-col gap-6">
-          <div className="flex items-center gap-2 px-1 text-[#D4A017]">
-            <FiLayout className="w-5 h-5 text-[#D4A017]" />
-            <h3 className="text-sm font-extrabold text-gray-800">قاعدة بيانات الحجوزات والمتابعة</h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1 border-b border-neutral-100 pb-3">
+            <div className="flex items-center gap-2 text-[#D4A017]">
+              <FiLayout className="w-5 h-5 text-[#D4A017]" />
+              <h3 className="text-sm font-extrabold text-gray-800">قاعدة بيانات الحجوزات والمتابعة</h3>
+            </div>
+
+            {/* View Mode Toggle */}
+            <div className="flex bg-neutral-100 p-1 rounded-xl items-center border border-neutral-200">
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all outline-none cursor-pointer ${
+                  viewMode === 'list' 
+                    ? 'bg-white text-gray-950 shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-800'
+                }`}
+              >
+                عرض القائمة
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('calendar')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all outline-none cursor-pointer ${
+                  viewMode === 'calendar' 
+                    ? 'bg-white text-gray-950 shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-800'
+                }`}
+              >
+                الجدول الزمني
+              </button>
+            </div>
           </div>
 
           {/* Filters (No branch filter) */}
@@ -428,11 +623,19 @@ const MainAppContent: React.FC = () => {
             dateFilter={dateFilter}
             onDateChange={setDateFilter}
             onClearFilters={handleClearFilters}
+            onExport={handleExportCSV}
           />
 
-          {/* Bookings Card feed */}
+          {/* Bookings Card feed or Calendar View */}
           {isLoading ? (
             <BookingCardSkeleton />
+          ) : viewMode === 'calendar' ? (
+            <CalendarView
+              bookings={filteredBookings}
+              onViewDetails={(b) => setActiveModal({ type: 'details', booking: b })}
+              onEditTime={(b) => setActiveModal({ type: 'edit', booking: b })}
+              onReschedule={handleReschedule}
+            />
           ) : filteredBookings.length === 0 ? (
             <EmptyState />
           ) : (
@@ -477,6 +680,9 @@ const MainAppContent: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Signature Section */}
+      <SignatureFooter />
 
       {/* Modals & Screens list */}
       <AnimatePresence>

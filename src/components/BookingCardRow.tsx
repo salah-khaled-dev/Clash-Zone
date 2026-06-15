@@ -128,7 +128,7 @@ export const BookingCardRow: React.FC<BookingCardRowProps> = ({
             {booking.customer_name}
             {booking.customer_type === 'vip' && <span className="text-xs" title="عميل VIP">👑</span>}
           </span>
-          <span className="text-[11px] font-semibold text-gray-400 flex items-center gap-1 mt-2.5 truncate">
+          <span className="text-[13px] font-semibold text-gray-400 flex items-center gap-1 mt-2 truncate">
             <LuCar className="w-3.5 h-3.5 text-[#D4A017] flex-shrink-0" />
             <span className="truncate">{displayCar}</span>
           </span>
@@ -136,31 +136,31 @@ export const BookingCardRow: React.FC<BookingCardRowProps> = ({
       </div>
 
       {/* Column 2: Badges (Source & Client Type) */}
-      <div className="flex flex-row lg:flex-col gap-2.5 min-w-0 items-center lg:items-start">
+      <div className="flex flex-row lg:flex-col gap-2 min-w-0 items-center lg:items-start">
         {/* Source badge */}
-        <span className="text-[11px] font-bold text-gray-700 bg-neutral-50 border border-neutral-150 px-2.5 py-1 rounded-xl whitespace-nowrap">
+        <span className="text-xs font-bold text-gray-700 bg-neutral-50 border border-neutral-150 px-2.5 py-1 rounded-xl whitespace-nowrap">
           {getSourceIcon(booking.customer_source)} {booking.customer_source}
         </span>
         {/* Client Type badge */}
-        <span className={`text-[10px] font-black border px-2 py-0.5 rounded-lg whitespace-nowrap ${getTypeBadgeClass(booking.customer_type)}`}>
+        <span className={`text-[11px] font-black border px-2 py-0.5 rounded-lg whitespace-nowrap ${getTypeBadgeClass(booking.customer_type)}`}>
           {displayClientType}
         </span>
       </div>
 
       {/* Column 3: Service */}
       <div className="flex items-center min-w-0">
-        <span className="text-xs font-black text-gray-900 bg-neutral-50 border border-neutral-150 px-3 py-1.5 rounded-xl truncate whitespace-nowrap">
+        <span className="text-[13px] font-black text-gray-900 bg-neutral-50 border border-neutral-150 px-3 py-1.5 rounded-xl truncate whitespace-nowrap">
           {displayService}
         </span>
       </div>
 
       {/* Column 4: Date & Time details */}
       <div className="flex flex-row lg:flex-col items-center lg:items-start gap-4 lg:gap-1.5 min-w-0">
-        <span className="text-xs font-extrabold text-gray-600 flex items-center gap-1.5">
+        <span className="text-[13px] font-extrabold text-gray-600 flex items-center gap-1.5">
           <FiCalendar className="w-3.5 h-3.5 text-[#D4A017] flex-shrink-0" />
           <span className="leading-none">{displayDate}</span>
         </span>
-        <span className="text-xs font-extrabold text-amber-800 bg-amber-50 border border-amber-200/25 px-2 py-0.5 rounded-lg flex items-center gap-1">
+        <span className="text-[13px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200/25 px-2 py-0.5 rounded-lg flex items-center gap-1">
           <FiClock className="w-3.5 h-3.5 text-[#D4A017] flex-shrink-0" />
           <span className="leading-none">{displayTime}</span>
         </span>
@@ -168,7 +168,7 @@ export const BookingCardRow: React.FC<BookingCardRowProps> = ({
 
       {/* Column 5: Static Branch Details */}
       <div className="flex items-center min-w-0">
-        <span className="text-xs font-semibold text-gray-400 flex items-center gap-1 truncate">
+        <span className="text-[13px] font-semibold text-gray-400 flex items-center gap-1 truncate">
           <FiMapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
           <span className="truncate">{displayBranch}</span>
         </span>
@@ -263,7 +263,7 @@ export const BookingCardRow: React.FC<BookingCardRowProps> = ({
 
       {/* Brief Notes Preview at the bottom of the card if notes exist */}
       {booking.notes && (
-        <div className="col-span-full border-t border-dashed border-neutral-100 pt-2.5 mt-1 text-[11px] font-bold text-gray-400 flex items-start gap-1.5">
+        <div className="col-span-full border-t border-dashed border-neutral-100 pt-2.5 mt-1 text-xs font-bold text-gray-400 flex items-start gap-1.5">
           <span className="text-[#D4A017] flex-shrink-0">📝 ملاحظات المتابعة:</span>
           <span className="text-gray-500 font-semibold line-clamp-1 flex-grow">{booking.notes}</span>
         </div>
