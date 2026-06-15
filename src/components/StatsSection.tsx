@@ -26,7 +26,7 @@ const CountUp: React.FC<{ value: number; duration?: number }> = ({ value, durati
     let start = 0;
     const end = value;
     if (start === end) {
-      setCount(end);
+      setCount(prev => prev === end ? prev : end);
       return;
     }
     const totalMiliseconds = duration * 1000;

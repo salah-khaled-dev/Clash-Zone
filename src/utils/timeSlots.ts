@@ -20,12 +20,7 @@ export function generateSlots(): TimeSlot[] {
     const key = `${formattedHour}:00 ${ampm}`;
     
     // Arabic label
-    let period = "";
-    if (hour === 12) {
-      period = "ظهرًا";
-    } else {
-      period = isPM ? "مساءً" : "صباحًا";
-    }
+    const period = hour === 12 ? "ظهرًا" : (isPM ? "مساءً" : "صباحًا");
     const label = `${formattedHour}:00 ${period}`;
     
     slots.push({ key, label });

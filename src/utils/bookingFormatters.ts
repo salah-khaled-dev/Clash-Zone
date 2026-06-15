@@ -10,7 +10,7 @@ export function formatArabicDate(dateStr: string): string {
       month: 'long',
       year: 'numeric'
     }).format(date);
-  } catch (e) {
+  } catch {
     return dateStr;
   }
 }
@@ -20,16 +20,9 @@ export function formatArabicTime(timeStr: string): string {
   const clean = timeStr.trim().toUpperCase();
   const match = clean.match(/^(\d{2}):(\d{2})\s*(AM|PM)$/);
   if (match) {
-    const [_, hours, minutes, ampm] = match;
+    const [, hours, minutes, ampm] = match;
     const hr = parseInt(hours, 10);
-    let period = "";
-    if (hr === 12 && ampm === "PM") {
-      period = "ظهرًا";
-    } else if (ampm === "AM") {
-      period = "صباحًا";
-    } else {
-      period = "مساءً";
-    }
+    const period = (hr === 12 && ampm === "PM") ? "ظهرًا" : (ampm === "AM" ? "صباحًا" : "مساءً");
     return `${hours}:${minutes} ${period}`;
   }
   return timeStr;

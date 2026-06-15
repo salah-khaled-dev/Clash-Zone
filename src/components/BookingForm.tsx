@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   FiUser, 
   FiPhone, 
@@ -55,11 +55,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ bookings, onSubmitBook
   const [notes, setNotes] = useState('');
 
   // Slots state
-  const [slots, setSlots] = useState<TimeSlot[]>([]);
-
-  useEffect(() => {
-    setSlots(generateSlots());
-  }, []);
+  const [slots] = useState<TimeSlot[]>(() => generateSlots());
 
   const todayStr = new Date().toISOString().split('T')[0];
 

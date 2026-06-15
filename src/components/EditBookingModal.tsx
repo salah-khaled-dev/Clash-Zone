@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FiX, FiCalendar, FiClock, FiUser, FiPhone, FiShare2, FiTag, FiFileText } from 'react-icons/fi';
 import { LuCar } from 'react-icons/lu';
@@ -48,11 +48,7 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
   const [lastContactDate, setLastContactDate] = useState(getInitialDateStr(booking.last_contact_date));
   const [nextFollowupDate, setNextFollowupDate] = useState(getInitialDateStr(booking.next_followup_date));
 
-  const [slots, setSlots] = useState<TimeSlot[]>([]);
-
-  useEffect(() => {
-    setSlots(generateSlots());
-  }, []);
+  const [slots] = useState<TimeSlot[]>(() => generateSlots());
 
   const todayStr = new Date().toISOString().split('T')[0];
 
