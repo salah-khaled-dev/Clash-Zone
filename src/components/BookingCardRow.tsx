@@ -124,7 +124,7 @@ export const BookingCardRow: React.FC<BookingCardRowProps> = ({
           <FiUser className="w-5 h-5" />
         </div>
         <div className="flex flex-col min-w-0">
-          <span className="text-base font-extrabold text-gray-900 tracking-tight leading-[1.3] truncate flex items-center gap-1.5">
+          <span className="text-base font-extrabold text-gray-900 tracking-tight leading-normal truncate flex items-center gap-1.5">
             {booking.customer_name}
             {booking.customer_type === 'vip' && <span className="text-xs" title="عميل VIP">👑</span>}
           </span>
