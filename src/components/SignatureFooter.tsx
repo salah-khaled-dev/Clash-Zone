@@ -12,7 +12,7 @@ const SparkleIcon = () => (
   </svg>
 );
 
-export const SignatureFooter: React.FC = () => {
+export const SignatureFooter = React.memo(() => {
   return (
     <div className="w-full py-10 px-4 mt-16 mb-4 flex justify-center items-center select-none" dir="ltr">
       <motion.a
@@ -86,6 +86,6 @@ export const SignatureFooter: React.FC = () => {
       </motion.a>
     </div>
   );
-};
+});
 
 export default SignatureFooter;

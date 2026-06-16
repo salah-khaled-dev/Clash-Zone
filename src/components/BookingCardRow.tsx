@@ -35,7 +35,7 @@ interface BookingCardRowProps {
   onDelete?: (bookingId: string) => void; // Added for CRM direct deletes
 }
 
-export const BookingCardRow: React.FC<BookingCardRowProps> = ({
+export const BookingCardRow = React.memo<BookingCardRowProps>(({
   booking,
   onViewDetails,
   onEditTime,
@@ -65,6 +65,7 @@ export const BookingCardRow: React.FC<BookingCardRowProps> = ({
       case 'صديق / توصية': return '🤝';
       case 'جوجل': return '🔍';
       case 'إعلان ممول': return '📣';
+      case 'وكالة': return '🏢';
       default: return '🌐';
     }
   };
@@ -77,6 +78,16 @@ export const BookingCardRow: React.FC<BookingCardRowProps> = ({
       case 'vip': return 'bg-amber-50 text-amber-700 border-amber-200/50 shadow-sm ring-1 ring-amber-400/10';
       case 'referred': return 'bg-cyan-50 text-cyan-700 border-cyan-100';
       default: return 'bg-neutral-50 text-neutral-500 border-neutral-100';
+    }
+  };
+
+  // Marketing source badge styling
+  const getSourceBadgeClass = (source: string) => {
+    switch (source) {
+      case 'وكالة':
+        return 'bg-indigo-50 text-indigo-700 border-indigo-100';
+      default:
+        return 'bg-neutral-50 text-gray-700 border-neutral-150';
     }
   };
 
@@ -138,7 +149,7 @@ export const BookingCardRow: React.FC<BookingCardRowProps> = ({
       {/* Column 2: Badges (Source & Client Type) */}
       <div className="flex flex-row lg:flex-col gap-2 min-w-0 items-center lg:items-start">
         {/* Source badge */}
-        <span className="text-xs font-bold text-gray-700 bg-neutral-50 border border-neutral-150 px-2.5 py-1 rounded-xl whitespace-nowrap">
+        <span className={`text-xs font-bold border px-2.5 py-1 rounded-xl whitespace-nowrap ${getSourceBadgeClass(booking.customer_source)}`}>
           {getSourceIcon(booking.customer_source)} {booking.customer_source}
         </span>
         {/* Client Type badge */}
@@ -270,6 +281,6 @@ export const BookingCardRow: React.FC<BookingCardRowProps> = ({
       )}
     </motion.div>
   );
-};
+});
 
-export default React.memo(BookingCardRow);
+export default BookingCardRow;

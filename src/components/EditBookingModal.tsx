@@ -114,7 +114,6 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
     "حماية الطلاء PPF",
     "نانو سيراميك",
     "عزل حراري",
-    "تظليل النوافذ",
     "غسيل وتلميع",
     "خدمة أخرى"
   ];
@@ -129,6 +128,7 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
     "صديق / توصية",
     "جوجل",
     "إعلان ممول",
+    "وكالة",
     "أخرى"
   ];
 

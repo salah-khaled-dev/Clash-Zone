@@ -35,7 +35,7 @@ interface BookingFormProps {
   }) => void;
 }
 
-export const BookingForm: React.FC<BookingFormProps> = ({ bookings, onSubmitBooking }) => {
+export const BookingForm = React.memo<BookingFormProps>(({ bookings, onSubmitBooking }) => {
   const { showToast } = useToast();
 
   // Form Fields State
@@ -131,7 +131,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ bookings, onSubmitBook
     "حماية الطلاء PPF",
     "نانو سيراميك",
     "عزل حراري",
-    "تظليل النوافذ",
     "غسيل وتلميع",
     "خدمة أخرى"
   ];
@@ -146,6 +145,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ bookings, onSubmitBook
     "صديق / توصية",
     "جوجل",
     "إعلان ممول",
+    "وكالة",
     "أخرى"
   ];
 
@@ -399,6 +399,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ bookings, onSubmitBook
       </form>
     </div>
   );
-};
+});
 
-export default React.memo(BookingForm);
+export default BookingForm;

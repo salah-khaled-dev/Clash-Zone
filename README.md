@@ -227,3 +227,13 @@ The project can be deployed seamlessly to Vercel, Netlify, or AWS Amplify:
 *   **v2.0.0:** Configured database structure in Supabase (bookings, branches, services).
 *   **v3.0.0:** Integrated PostgreSQL Realtime events, stats dashboards, drag-and-drop calendars, and CSV export functionality.
 *   **v4.0.0:** Embedded Supabase Authentication gates, luxury dark/gold aesthetic, parallax animations, floating mesh gradients, and the designer signature badge.
+*   **v5.0.0 (Latest):** Performance Optimization, Asset Compression, and SEO/Social Share Overhaul:
+    *   **Asset Compression**: Compressed raw branding images (`logo.png` 2.95MB and `ppf_installation.png` 810KB) into WebP format (`logo.webp` 113KB and `ppf_installation.webp` 118KB), yielding a **93.7% network weight reduction**.
+    *   **Favicon Optimization Strategy**: Generated ICO formats, modern multi-resolution PNGs, Apple Touch Icon (180x180 px), and Android splash icons, reducing favicon asset size from 2.95MB to **2KB (99.93% reduction)**. Added web manifest configurations.
+    *   **Open Graph Social Branding**: Generated a high-resolution 1200x630 pixel sharing card (`og-preview.png`) and fully configured Open Graph/Twitter meta tags in `index.html`.
+    *   **Monolithic JS Bundle Splitting**: Implemented React lazy loading (`React.lazy` and `Suspense`) and configured manual Rollup chunk splitting in `vite.config.ts`, shrinking the entry JS chunk size by **90.7%** (from 647.27kB to 59.98kB).
+    *   **Linter & Type Alignment**: Rectified unused catch exceptions, synchronized React states in async triggers, and resolved synchronous setState linter errors.
+    *   **Component Rendering Optimizations**: Configured named memo exports for main items (`BookingCardRow`, `FilterToolbar`, `BookingForm`, `StatsSection`, `Logo`, `SignatureFooter`) to eliminate cascaded rendering loops.
+    *   **Crawl Indexing Safeguards**: Created `robots.txt` disallowing crawlers to index administrative CRM data.
+    *   **Services Update**: Removed "Window Tinting" (`تظليل النوافذ`) from selectable list options to match current operational services.
+    *   **Client Marketing Sources**: Added "Agency/Dealer" (`وكالة`) to selectable marketing sources with a dedicated icon and customized Indigo highlight color tag.

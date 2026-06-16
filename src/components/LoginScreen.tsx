@@ -4,14 +4,14 @@ import { FiMail, FiLock, FiAlertCircle } from 'react-icons/fi';
 import { supabase } from '../lib/supabase';
 import { useToast } from './ToastProvider';
 import Logo from './Logo';
-import ppfInstallationImg from '../assets/ppf_installation.png';
+import ppfInstallationImg from '../assets/ppf_installation.webp';
 import SignatureFooter from './SignatureFooter';
 
 interface LoginScreenProps {
   onLoginSuccess: () => void;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
+export const LoginScreen = React.memo<LoginScreenProps>(({ onLoginSuccess }) => {
   const { showToast } = useToast();
   
   const [email, setEmail] = useState('');
@@ -327,6 +327,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
       <SignatureFooter />
     </div>
   );
-};
+});
 
 export default LoginScreen;

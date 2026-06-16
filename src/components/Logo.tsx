@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import logoImg from '../assets/logo.png';
+import logoImg from '../assets/logo.webp';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -9,7 +9,7 @@ interface LogoProps {
   className?: string;
 }
 
-export const Logo: React.FC<LogoProps> = ({
+export const Logo = React.memo<LogoProps>(({
   size = 'md',
   variant = 'default',
   className = ''
@@ -92,6 +92,6 @@ export const Logo: React.FC<LogoProps> = ({
       {logoText}
     </div>
   );
-};
+});
 
 export default Logo;

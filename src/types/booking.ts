@@ -10,6 +10,7 @@ export type CustomerSource =
   | 'صديق / توصية'
   | 'جوجل'
   | 'إعلان ممول'
+  | 'وكالة'
   | 'أخرى';
 
 export type CustomerType = 'new' | 'returning' | 'vip' | 'referred';

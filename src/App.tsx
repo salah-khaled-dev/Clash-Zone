@@ -2,23 +2,26 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiCalendar, FiClock, FiLayout, FiPhone, FiMessageCircle } from 'react-icons/fi';
 import { supabase } from './lib/supabase';
+import type { Session } from '@supabase/supabase-js';
 import type { Booking, BookingStatus, CustomerSource, CustomerType } from './types/booking';
 import { bookingsService } from './services/bookings.service';
-import { StatsSection } from './components/StatsSection';
 import { FilterToolbar } from './components/FilterToolbar';
 import { BookingCardRow } from './components/BookingCardRow';
 import { BookingForm } from './components/BookingForm';
-import { SuccessScreen } from './components/SuccessScreen';
-import { BookingDetailsModal } from './components/BookingDetailsModal';
-import { EditBookingModal } from './components/EditBookingModal';
 import { EmptyState } from './components/EmptyState';
 import { BookingCardSkeleton, StatsSkeleton } from './components/LoadingSkeleton';
 import { ToastProvider, useToast } from './components/ToastProvider';
 import { Logo } from './components/Logo';
 import { formatArabicDate, formatArabicTime, formatVehicleName } from './utils/bookingFormatters';
-import { CalendarView } from './components/CalendarView';
-import { LoginScreen } from './components/LoginScreen';
 import { SignatureFooter } from './components/SignatureFooter';
+
+// Lazy load heavy components
+const StatsSection = React.lazy(() => import('./components/StatsSection').then(m => ({ default: m.StatsSection })));
+const SuccessScreen = React.lazy(() => import('./components/SuccessScreen').then(m => ({ default: m.SuccessScreen })));
+const BookingDetailsModal = React.lazy(() => import('./components/BookingDetailsModal').then(m => ({ default: m.BookingDetailsModal })));
+const EditBookingModal = React.lazy(() => import('./components/EditBookingModal').then(m => ({ default: m.EditBookingModal })));
+const CalendarView = React.lazy(() => import('./components/CalendarView').then(m => ({ default: m.CalendarView })));
+const LoginScreen = React.lazy(() => import('./components/LoginScreen').then(m => ({ default: m.LoginScreen })));
 
 type ModalState = 
   | { type: 'details'; booking: Booking }
@@ -48,7 +51,7 @@ const MainAppContent: React.FC = () => {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
 
   // Supabase Auth states
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
 
   // Check Supabase Auth Session on startup and listen to updates
@@ -84,7 +87,10 @@ const MainAppContent: React.FC = () => {
   useEffect(() => {
     if (!session) return;
 
-    fetchBookings();
+    // Fetch bookings in next tick to avoid synchronous setState inside useEffect body
+    const timer = setTimeout(() => {
+      fetchBookings();
+    }, 0);
 
     // Setup Postgres Realtime Channel with Incremental State Updates
     const channel = supabase
@@ -138,6 +144,7 @@ const MainAppContent: React.FC = () => {
       .subscribe();
 
     return () => {
+      clearTimeout(timer);
       supabase.removeChannel(channel);
     };
   }, [fetchBookings, session]);
@@ -148,6 +155,7 @@ const MainAppContent: React.FC = () => {
       await bookingsService.confirmBooking(booking.id);
       showToast("تم تأكيد الحجز بنجاح وتوثيق التواصل", "success");
     } catch (err) {
+      console.error('Error confirming booking:', err);
       showToast("فشلت عملية تأكيد الحجز", "error");
     }
   }, [showToast]);
@@ -157,6 +165,7 @@ const MainAppContent: React.FC = () => {
       await bookingsService.cancelBooking(booking.id);
       showToast("تم إلغاء موعد العميل بنجاح", "warning");
     } catch (err) {
+      console.error('Error canceling booking:', err);
       showToast("فشل إلغاء حجز العميل", "error");
     }
   }, [showToast]);
@@ -167,6 +176,7 @@ const MainAppContent: React.FC = () => {
       setActiveModal(null);
       showToast("تم تعديل حجز وسجل العميل بنجاح", "success");
     } catch (err) {
+      console.error('Error saving edited booking:', err);
       showToast("فشل تحديث الموعد، يرجى التحقق من توفر الساعة المحددة", "error");
     }
   }, [showToast]);
@@ -215,6 +225,7 @@ const MainAppContent: React.FC = () => {
         showToast("فشل عملية الحذف", "error");
       }
     } catch (err) {
+      console.error('Error deleting booking:', err);
       showToast("فشل حذف حجز العميل", "error");
     }
   }, [showToast]);
@@ -241,6 +252,7 @@ const MainAppContent: React.FC = () => {
       });
       showToast(`تم إعادة جدولة حجز العميل ${booking.customer_name} بنجاح`, "success");
     } catch (err) {
+      console.error('Error rescheduling booking:', err);
       showToast("فشلت عملية إعادة جدولة حجز العميل", "error");
     }
   }, [bookings, showToast]);
@@ -389,6 +401,7 @@ const MainAppContent: React.FC = () => {
       await supabase.auth.signOut();
       showToast("تم تسجيل الخروج بنجاح", "success");
     } catch (err) {
+      console.error('Logout error:', err);
       showToast("فشلت عملية تسجيل الخروج", "error");
     }
   }, [showToast]);
@@ -433,7 +446,18 @@ const MainAppContent: React.FC = () => {
   }
 
   if (!session) {
-    return <LoginScreen onLoginSuccess={() => {}} />;
+    return (
+      <React.Suspense fallback={
+        <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center" dir="rtl">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-10 h-10 border-4 border-[#F4C542] border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs font-bold text-gray-500">جاري تحميل شاشة الدخول...</span>
+          </div>
+        </div>
+      }>
+        <LoginScreen onLoginSuccess={() => {}} />
+      </React.Suspense>
+    );
   }
 
   return (
@@ -465,7 +489,13 @@ const MainAppContent: React.FC = () => {
         </header>
 
         {/* 1. Statistics & Marketing Analytics Panel */}
-        {isLoading ? <StatsSkeleton /> : <StatsSection bookings={bookings} />}
+        {isLoading ? (
+          <StatsSkeleton />
+        ) : (
+          <React.Suspense fallback={<StatsSkeleton />}>
+            <StatsSection bookings={bookings} />
+          </React.Suspense>
+        )}
 
         {/* 2. Pinned Widget: Today's Appointments (مواعيد اليوم) */}
         <div className="w-full flex flex-col gap-4">
@@ -630,12 +660,14 @@ const MainAppContent: React.FC = () => {
           {isLoading ? (
             <BookingCardSkeleton />
           ) : viewMode === 'calendar' ? (
-            <CalendarView
-              bookings={filteredBookings}
-              onViewDetails={(b) => setActiveModal({ type: 'details', booking: b })}
-              onEditTime={(b) => setActiveModal({ type: 'edit', booking: b })}
-              onReschedule={handleReschedule}
-            />
+            <React.Suspense fallback={<BookingCardSkeleton />}>
+              <CalendarView
+                bookings={filteredBookings}
+                onViewDetails={(b) => setActiveModal({ type: 'details', booking: b })}
+                onEditTime={(b) => setActiveModal({ type: 'edit', booking: b })}
+                onReschedule={handleReschedule}
+              />
+            </React.Suspense>
           ) : filteredBookings.length === 0 ? (
             <EmptyState />
           ) : (
@@ -688,29 +720,35 @@ const MainAppContent: React.FC = () => {
       <AnimatePresence>
         {/* Success Screen Overlay */}
         {activeModal?.type === 'success' && (
-          <SuccessScreen
-            booking={activeModal.booking}
-            onViewBooking={handleViewMyBooking}
-            onBookAnother={handleBookAnother}
-          />
+          <React.Suspense fallback={null}>
+            <SuccessScreen
+              booking={activeModal.booking}
+              onViewBooking={handleViewMyBooking}
+              onBookAnother={handleBookAnother}
+            />
+          </React.Suspense>
         )}
 
         {/* View Details Modal Overlay */}
         {activeModal?.type === 'details' && (
-          <BookingDetailsModal
-            booking={activeModal.booking}
-            onClose={() => setActiveModal(null)}
-          />
+          <React.Suspense fallback={null}>
+            <BookingDetailsModal
+              booking={activeModal.booking}
+              onClose={() => setActiveModal(null)}
+            />
+          </React.Suspense>
         )}
 
         {/* Edit Booking Modal Overlay */}
         {activeModal?.type === 'edit' && (
-          <EditBookingModal
-            booking={activeModal.booking}
-            bookings={bookings}
-            onClose={() => setActiveModal(null)}
-            onSave={handleEditBookingSave}
-          />
+          <React.Suspense fallback={null}>
+            <EditBookingModal
+              booking={activeModal.booking}
+              bookings={bookings}
+              onClose={() => setActiveModal(null)}
+              onSave={handleEditBookingSave}
+            />
+          </React.Suspense>
         )}
       </AnimatePresence>
     </div>

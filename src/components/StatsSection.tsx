@@ -48,7 +48,7 @@ const CountUp: React.FC<{ value: number; duration?: number }> = ({ value, durati
   return <>{new Intl.NumberFormat('ar-EG').format(count)}</>;
 };
 
-export const StatsSection: React.FC<StatsSectionProps> = ({ bookings }) => {
+export const StatsSection = React.memo<StatsSectionProps>(({ bookings }) => {
   const todayStr = new Date().toISOString().split('T')[0];
 
   // 1. Appointment Counts
@@ -242,6 +242,6 @@ export const StatsSection: React.FC<StatsSectionProps> = ({ bookings }) => {
       </div>
     </div>
   );
-};
+});
 
 export default StatsSection;

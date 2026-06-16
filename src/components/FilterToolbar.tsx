@@ -17,7 +17,7 @@ interface FilterToolbarProps {
   onExport: () => void;
 }
 
-export const FilterToolbar: React.FC<FilterToolbarProps> = ({
+export const FilterToolbar = React.memo<FilterToolbarProps>(({
   searchQuery,
   onSearchChange,
   statusFilter,
@@ -147,6 +147,6 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
       </div>
     </div>
   );
-};
+});
 
-export default React.memo(FilterToolbar);
+export default FilterToolbar;
