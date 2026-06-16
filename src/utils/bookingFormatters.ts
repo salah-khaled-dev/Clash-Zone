@@ -1,19 +1,22 @@
 import { translateService, translateStatus, translateVehicle, translateCustomerType } from './translations';
 
+const arabicDateFormatter = new Intl.DateTimeFormat("ar-SA-u-ca-gregory", {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric'
+});
+
 export function formatArabicDate(dateStr: string): string {
   if (!dateStr) return "";
   try {
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) return dateStr;
-    return new Intl.DateTimeFormat("ar-SA-u-ca-gregory", {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    }).format(date);
+    return arabicDateFormatter.format(date);
   } catch {
     return dateStr;
   }
 }
+
 
 export function formatArabicTime(timeStr: string): string {
   if (!timeStr) return "";

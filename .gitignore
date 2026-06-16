@@ -28,4 +28,5 @@ dist-ssr
 .env.local
 .env.production
 .env*.local
-
+# Rollup Visualizer Stats
+stats.html

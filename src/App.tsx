@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { FiCalendar, FiClock, FiLayout, FiPhone, FiMessageCircle } from 'react-icons/fi';
 import { supabase } from './lib/supabase';
 import type { Session } from '@supabase/supabase-js';
@@ -10,7 +9,8 @@ import { BookingCardRow } from './components/BookingCardRow';
 import { BookingForm } from './components/BookingForm';
 import { EmptyState } from './components/EmptyState';
 import { BookingCardSkeleton, StatsSkeleton } from './components/LoadingSkeleton';
-import { ToastProvider, useToast } from './components/ToastProvider';
+import { ToastProvider } from './components/ToastProvider';
+import { useToast } from './components/useToast';
 import { Logo } from './components/Logo';
 import { formatArabicDate, formatArabicTime, formatVehicleName } from './utils/bookingFormatters';
 import { SignatureFooter } from './components/SignatureFooter';
@@ -46,6 +46,14 @@ const MainAppContent: React.FC = () => {
 
   // Unified Overlays State
   const [activeModal, setActiveModal] = useState<ModalState>(null);
+
+  const handleViewDetails = useCallback((booking: Booking) => {
+    setActiveModal({ type: 'details', booking });
+  }, []);
+
+  const handleEditTime = useCallback((booking: Booking) => {
+    setActiveModal({ type: 'edit', booking });
+  }, []);
 
   // View Mode: list vs calendar
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
@@ -514,10 +522,9 @@ const MainAppContent: React.FC = () => {
                 const displayTime = formatArabicTime(appointment.time_slot);
                 const displayCar = formatVehicleName(`${appointment.vehicle_make} ${appointment.vehicle_model}`);
                 return (
-                  <motion.div
+                  <div
                     key={appointment.id}
-                    whileHover={{ y: -2 }}
-                    className="p-4 bg-white border border-neutral-100 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex items-center justify-between gap-3 relative overflow-hidden"
+                    className="p-4 bg-white border border-neutral-100 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex items-center justify-between gap-3 relative overflow-hidden card-hover-effect"
                   >
                     {/* Time indicator band */}
                     <div className="absolute right-0 top-0 bottom-0 w-1 bg-[#F4C542]" />
@@ -556,7 +563,7 @@ const MainAppContent: React.FC = () => {
                         <FiMessageCircle className="w-4 h-4" />
                       </a>
                     </div>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>
@@ -663,8 +670,8 @@ const MainAppContent: React.FC = () => {
             <React.Suspense fallback={<BookingCardSkeleton />}>
               <CalendarView
                 bookings={filteredBookings}
-                onViewDetails={(b) => setActiveModal({ type: 'details', booking: b })}
-                onEditTime={(b) => setActiveModal({ type: 'edit', booking: b })}
+                onViewDetails={handleViewDetails}
+                onEditTime={handleEditTime}
                 onReschedule={handleReschedule}
               />
             </React.Suspense>
@@ -683,31 +690,19 @@ const MainAppContent: React.FC = () => {
                 <div className="text-center">الإجراءات والاتصال</div>
               </div>
 
-              <motion.div
-                layout
-                initial="hidden"
-                animate="show"
-                variants={{
-                  hidden: { opacity: 0 },
-                  show: {
-                    opacity: 1,
-                    transition: { staggerChildren: 0.05 }
-                  }
-                }}
-                className="flex flex-col gap-4"
-              >
+              <div className="flex flex-col gap-4">
                 {filteredBookings.map(booking => (
                   <BookingCardRow
                     key={booking.id}
                     booking={booking}
-                    onViewDetails={(b) => setActiveModal({ type: 'details', booking: b })}
-                    onEditTime={(b) => setActiveModal({ type: 'edit', booking: b })}
+                    onViewDetails={handleViewDetails}
+                    onEditTime={handleEditTime}
                     onConfirm={handleConfirmBooking}
                     onCancel={handleCancelBooking}
                     onDelete={handleDeleteBooking}
                   />
                 ))}
-              </motion.div>
+              </div>
             </div>
           )}
         </div>
@@ -717,7 +712,6 @@ const MainAppContent: React.FC = () => {
       <SignatureFooter />
 
       {/* Modals & Screens list */}
-      <AnimatePresence>
         {/* Success Screen Overlay */}
         {activeModal?.type === 'success' && (
           <React.Suspense fallback={null}>
@@ -750,7 +744,6 @@ const MainAppContent: React.FC = () => {
             />
           </React.Suspense>
         )}
-      </AnimatePresence>
     </div>
   );
 };

@@ -1,9 +1,18 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    visualizer({
+      filename: 'stats.html',
+      open: false,
+      gzipSize: true,
+      brotliSize: true,
+    })
+  ],
   build: {
     rollupOptions: {
       output: {
@@ -15,10 +24,7 @@ export default defineConfig({
             if (id.includes('@supabase')) {
               return 'vendor-supabase';
             }
-            if (id.includes('framer-motion')) {
-              return 'vendor-motion';
-            }
-            if (id.includes('react-icons') || id.includes('lucide-react')) {
+            if (id.includes('react-icons')) {
               return 'vendor-icons';
             }
             return 'vendor-others';
@@ -28,3 +34,4 @@ export default defineConfig({
     }
   }
 })
+

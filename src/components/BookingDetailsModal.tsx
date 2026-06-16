@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { FiX, FiUser, FiPhone, FiMapPin, FiClock, FiCalendar, FiShare2, FiTag, FiFileText } from 'react-icons/fi';
 import { LuCar } from 'react-icons/lu';
 import { HiSparkles } from 'react-icons/hi2';
@@ -40,20 +39,17 @@ export const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ bookin
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/45 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-      <motion.div
+    <div className="fixed inset-0 z-50 bg-black/45 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="booking-details-title"
-        initial={{ opacity: 0, scale: 0.95, y: 15 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 15 }}
-        className="bg-white rounded-[32px] p-6 lg:p-8 w-full max-w-lg shadow-2xl border border-neutral-100 flex flex-col text-right relative max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-[32px] p-6 lg:p-8 w-full max-w-lg shadow-2xl border border-neutral-100 flex flex-col text-right relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200"
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 left-5 p-2.5 text-gray-400 hover:text-gray-700 hover:bg-neutral-50 rounded-full transition-all"
+          className="absolute top-5 left-5 p-2.5 text-gray-400 hover:text-gray-700 hover:bg-neutral-50 rounded-full transition-[background-color,color] duration-200"
           aria-label="إغلاق"
         >
           <FiX className="w-5 h-5" />
@@ -182,11 +178,11 @@ export const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ bookin
         <button
           onClick={onClose}
           type="button"
-          className="w-full py-3.5 bg-neutral-100 hover:bg-neutral-200 text-gray-700 rounded-xl font-bold text-sm transition-colors mt-6 outline-none"
+          className="w-full py-3.5 bg-neutral-100 hover:bg-neutral-200 text-gray-700 rounded-xl font-bold text-sm transition-[background-color,color] duration-200 mt-6 outline-none"
         >
           إغلاق النافذة
         </button>
-      </motion.div>
+      </div>
     </div>
   );
 };

@@ -20,7 +20,7 @@ interface CalendarViewProps {
   onReschedule: (booking: Booking, newDate: string, newSlot: string) => void;
 }
 
-export const CalendarView: React.FC<CalendarViewProps> = ({
+export const CalendarView = React.memo<CalendarViewProps>(({
   bookings,
   onViewDetails,
   onEditTime,
@@ -311,6 +311,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default CalendarView;

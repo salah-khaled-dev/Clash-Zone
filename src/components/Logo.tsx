@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import logoImg from '../assets/logo.webp';
 
 interface LogoProps {
@@ -46,12 +45,10 @@ export const Logo = React.memo<LogoProps>(({
 
   // Image Element
   const logoSymbol = (
-    <motion.img
+    <img
       src={logoImg}
       alt="Infinity Bright Logo"
-      className={`${currentSize.img} object-contain drop-shadow-[0_2px_8px_rgba(244,197,66,0.12)]`}
-      whileHover={{ scale: 1.05, filter: 'brightness(1.05)' }}
-      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+      className={`${currentSize.img} object-contain drop-shadow-[0_2px_8px_rgba(244,197,66,0.12)] logo-img-hover`}
     />
   );
 
@@ -95,3 +92,4 @@ export const Logo = React.memo<LogoProps>(({
 });
 
 export default Logo;
+

@@ -1,6 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import type { Variants } from 'framer-motion';
 import { FiClock, FiMapPin, FiCalendar } from 'react-icons/fi';
 import { LuCar } from 'react-icons/lu';
 import { HiSparkles } from 'react-icons/hi2';
@@ -32,35 +30,14 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
   const displayDate = formatArabicDate(booking.booking_date);
   const displayTime = formatArabicTime(booking.time_slot);
 
-  const draw: Variants = {
-    hidden: { pathLength: 0, opacity: 0 },
-    visible: {
-      pathLength: 1,
-      opacity: 1,
-      transition: {
-        pathLength: { delay: 0.35, type: "spring", stiffness: 100, damping: 20 },
-        opacity: { delay: 0.35, duration: 0.01 }
-      }
-    }
-  };
-
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/45 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
-    >
-      <motion.div
+    <div className="fixed inset-0 z-50 bg-black/45 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="success-title"
         aria-describedby="success-description"
-        initial={{ opacity: 0, scale: 0.93, y: 15 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.93, y: 15 }}
-        transition={{ type: "spring", stiffness: 350, damping: 26 }}
-        className="bg-white rounded-[32px] p-6 lg:p-8 w-full max-w-md shadow-2xl border border-neutral-100 flex flex-col items-center text-center relative overflow-hidden"
+        className="bg-white rounded-[32px] p-6 lg:p-8 w-full max-w-md shadow-2xl border border-neutral-100 flex flex-col items-center text-center relative overflow-hidden animate-in zoom-in-95 duration-200"
       >
         {/* Soft Ambient Gold Glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#F4C542]/5 rounded-full filter blur-xl pointer-events-none" />
@@ -72,12 +49,7 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
 
         {/* Premium Gold Ring with SVG checkmark draw animation */}
         <div className="relative w-20 h-20 mb-6 flex items-center justify-center flex-shrink-0">
-          <motion.div
-            initial={{ scale: 0, rotate: -90 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 180, damping: 18, delay: 0.1 }}
-            className="absolute inset-0 rounded-full border-4 border-[#F4C542] shadow-lg shadow-[#F4C542]/10 bg-[#F4C542]/5"
-          />
+          <div className="absolute inset-0 rounded-full border-4 border-[#F4C542] shadow-lg shadow-[#F4C542]/10 bg-[#F4C542]/5 animate-scale-in" />
           
           <svg
             className="w-10 h-10 text-[#D4A017] relative z-10"
@@ -88,11 +60,9 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <motion.path
+            <path
               d="M20 6L9 17L4 12"
-              variants={draw}
-              initial="hidden"
-              animate="visible"
+              className="animate-draw-check"
             />
           </svg>
         </div>
@@ -169,7 +139,7 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
           <button
             type="button"
             onClick={onViewBooking}
-            className="w-full py-3.5 bg-gradient-to-r from-[#F4C542] to-[#FFD95A] hover:from-[#E8B923] hover:to-[#F4C542] text-gray-900 rounded-xl font-bold text-sm shadow-md shadow-[#F4C542]/10 transition-all flex items-center justify-center gap-2"
+            className="w-full py-3.5 bg-gradient-to-r from-[#F4C542] to-[#FFD95A] hover:from-[#E8B923] hover:to-[#F4C542] text-gray-900 rounded-xl font-bold text-sm shadow-md shadow-[#F4C542]/10 transition-[background-color,color] duration-250 flex items-center justify-center gap-2"
           >
             <span>عرض حجوزاتي في Dashboard</span>
           </button>
@@ -177,14 +147,15 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
           <button
             type="button"
             onClick={onBookAnother}
-            className="w-full py-3 bg-white hover:bg-neutral-50 text-gray-600 border border-neutral-200 rounded-xl font-bold text-sm transition-colors"
+            className="w-full py-3 bg-white hover:bg-neutral-50 text-gray-600 border border-neutral-200 rounded-xl font-bold text-sm transition-[background-color] duration-200"
           >
             حجز خدمة أخرى
           </button>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 };
 
 export default React.memo(SuccessScreen);
+

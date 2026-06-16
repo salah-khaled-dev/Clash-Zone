@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { FiClock, FiMessageSquare, FiCalendar, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import { formatStatus } from '../utils/bookingFormatters';
 
@@ -42,18 +41,15 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   const currentConfig = config[status] || config['جديد'];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.92 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.92 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-      className={`inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border ${currentConfig.bg} transition-all duration-300 shadow-sm`}
+    <div
+      className={`inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border ${currentConfig.bg} transition-[background-color,border-color,color] duration-300 shadow-sm animate-scale-in`}
     >
       <span className={`status-pulse-dot ${currentConfig.dot}`} />
       <span className="flex-shrink-0">{currentConfig.icon}</span>
       <span className="leading-none mt-0.5">{arabicStatus}</span>
-    </motion.div>
+    </div>
   );
 };
 
 export default React.memo(StatusBadge);
+

@@ -13,7 +13,7 @@ import { LuCar } from 'react-icons/lu';
 import { HiSparkles } from 'react-icons/hi2';
 import { generateSlots } from '../utils/timeSlots';
 import type { TimeSlot } from '../utils/timeSlots';
-import { useToast } from './ToastProvider';
+import { useToast } from './useToast';
 import type { Booking, BookingStatus, CustomerSource, CustomerType } from '../types/booking';
 
 interface BookingFormProps {

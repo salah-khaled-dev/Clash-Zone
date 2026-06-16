@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { 
   FiUser, 
   FiMapPin, 
@@ -16,7 +15,7 @@ import { LuCar } from 'react-icons/lu';
 import type { Booking } from '../types/booking';
 import { StatusBadge } from './StatusBadge';
 import { ActionMenu } from './ActionMenu';
-import { useToast } from './ToastProvider';
+import { useToast } from './useToast';
 import {
   formatArabicDate,
   formatArabicTime,
@@ -115,14 +114,8 @@ export const BookingCardRow = React.memo<BookingCardRowProps>(({
   };
 
   return (
-    <motion.div
-      variants={{
-        hidden: { opacity: 0, y: 12 },
-        show: { opacity: 1, y: 0 }
-      }}
-      transition={{ type: "spring", stiffness: 350, damping: 25 }}
-      whileHover={{ y: -3, boxShadow: "0 15px 35px -5px rgba(244, 197, 66, 0.08), 0 8px 12px -6px rgba(0, 0, 0, 0.01)" }}
-      className="w-full box-border bg-white border border-neutral-100 hover:border-[#F4C542]/50 rounded-[22px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] transition-all duration-300 flex flex-col lg:grid lg:grid-cols-[260px_160px_160px_140px_130px_150px_auto] lg:items-center gap-4 relative overflow-hidden"
+    <div
+      className="w-full box-border bg-white border border-neutral-100 hover:border-[#F4C542]/50 rounded-[22px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col lg:grid lg:grid-cols-[260px_160px_160px_140px_130px_150px_auto] lg:items-center gap-4 relative overflow-hidden card-hover-effect animate-fade-in-up"
     >
       {/* VIP Left border accent indicator */}
       {booking.customer_type === 'vip' && (
@@ -279,7 +272,7 @@ export const BookingCardRow = React.memo<BookingCardRowProps>(({
           <span className="text-gray-500 font-semibold line-clamp-1 flex-grow">{booking.notes}</span>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 });
 

@@ -100,9 +100,11 @@ export const FilterToolbar = React.memo<FilterToolbarProps>(({
             className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/80 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all cursor-pointer outline-none"
           >
             <option value="">كل الحالات</option>
-            <option value="pending">{translateStatus("pending")}</option>
-            <option value="completed">{translateStatus("completed")}</option>
-            <option value="cancelled">{translateStatus("cancelled")}</option>
+            <option value="جديد">{translateStatus("جديد")}</option>
+            <option value="تم التواصل">{translateStatus("تم التواصل")}</option>
+            <option value="تم التأكيد">{translateStatus("تم التأكيد")}</option>
+            <option value="مكتمل">{translateStatus("مكتمل")}</option>
+            <option value="ملغي">{translateStatus("ملغي")}</option>
           </select>
         </div>
 
@@ -115,9 +117,11 @@ export const FilterToolbar = React.memo<FilterToolbarProps>(({
             className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/80 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all cursor-pointer outline-none"
           >
             <option value="">كل الخدمات</option>
-            <option value="Paint Protection Film">{translateService("Paint Protection Film")}</option>
-            <option value="Nano Ceramic Coating">{translateService("Nano Ceramic Coating")}</option>
-            <option value="Thermal Insulation">{translateService("Thermal Insulation")}</option>
+            <option value="حماية الطلاء PPF">{translateService("حماية الطلاء PPF")}</option>
+            <option value="نانو سيراميك">{translateService("نانو سيراميك")}</option>
+            <option value="عزل حراري">{translateService("عزل حراري")}</option>
+            <option value="غسيل وتلميع">{translateService("غسيل وتلميع")}</option>
+            <option value="خدمة أخرى">{translateService("خدمة أخرى")}</option>
           </select>
         </div>
 
@@ -130,7 +134,7 @@ export const FilterToolbar = React.memo<FilterToolbarProps>(({
             className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/80 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all cursor-pointer outline-none"
           >
             <option value="">كل الفروع</option>
-            <option value="Riyadh">{translateBranch("Riyadh")}</option>
+            <option value="فرع الرياض - حي المروج">{translateBranch("فرع الرياض - حي المروج")}</option>
           </select>
         </div>
 

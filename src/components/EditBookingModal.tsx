@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { FiX, FiCalendar, FiClock, FiUser, FiPhone, FiShare2, FiTag, FiFileText } from 'react-icons/fi';
 import { LuCar } from 'react-icons/lu';
 import { HiSparkles } from 'react-icons/hi2';
 import type { Booking, BookingStatus, CustomerSource, CustomerType } from '../types/booking';
 import { generateSlots } from '../utils/timeSlots';
 import type { TimeSlot } from '../utils/timeSlots';
-import { useToast } from './ToastProvider';
+import { useToast } from './useToast';
 
 interface EditBookingModalProps {
   booking: Booking;
@@ -148,20 +147,17 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/45 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-      <motion.div
+    <div className="fixed inset-0 z-50 bg-black/45 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-booking-title"
-        initial={{ opacity: 0, scale: 0.95, y: 15 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 15 }}
-        className="bg-white rounded-[32px] p-6 lg:p-8 w-full max-w-xl shadow-2xl border border-neutral-100 flex flex-col text-right relative max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-[32px] p-6 lg:p-8 w-full max-w-xl shadow-2xl border border-neutral-100 flex flex-col text-right relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200"
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 left-5 p-2.5 text-gray-400 hover:text-gray-700 hover:bg-neutral-50 rounded-full transition-all"
+          className="absolute top-5 left-5 p-2.5 text-gray-400 hover:text-gray-700 hover:bg-neutral-50 rounded-full transition-[background-color,color] duration-250"
           aria-label="إغلاق"
         >
           <FiX className="w-5 h-5" />
@@ -187,7 +183,7 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 placeholder="الاسم الكامل"
-                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-semibold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all text-gray-800 outline-none"
+                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-semibold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 text-gray-800 outline-none"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -201,7 +197,7 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                 required
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
-                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-bold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all text-gray-800 outline-none"
+                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-bold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 text-gray-800 outline-none"
                 dir="ltr"
                 style={{ textAlign: 'right' }}
               />
@@ -219,7 +215,7 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                 id="edit-customer-source"
                 value={customerSource}
                 onChange={(e) => setCustomerSource(e.target.value as CustomerSource)}
-                className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all cursor-pointer outline-none"
+                className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 cursor-pointer outline-none"
               >
                 {sourcesList.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -233,7 +229,7 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                 id="edit-customer-type"
                 value={customerType}
                 onChange={(e) => setCustomerType(e.target.value as CustomerType)}
-                className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all cursor-pointer outline-none"
+                className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 cursor-pointer outline-none"
               >
                 {typesList.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
               </select>
@@ -253,7 +249,7 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                 required
                 value={vehicleMake}
                 onChange={(e) => setVehicleMake(e.target.value)}
-                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-semibold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all text-gray-800 outline-none"
+                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-semibold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 text-gray-800 outline-none"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -264,7 +260,7 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                 required
                 value={vehicleModel}
                 onChange={(e) => setVehicleModel(e.target.value)}
-                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-semibold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all text-gray-800 outline-none"
+                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-semibold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 text-gray-800 outline-none"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -274,7 +270,7 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                 type="text"
                 value={vehicleYear}
                 onChange={(e) => setVehicleYear(e.target.value)}
-                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-bold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all text-gray-800 outline-none"
+                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-bold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 text-gray-800 outline-none"
               />
             </div>
           </div>
@@ -290,7 +286,7 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                 id="edit-service-type"
                 value={serviceType}
                 onChange={(e) => setServiceType(e.target.value)}
-                className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all cursor-pointer outline-none"
+                className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 cursor-pointer outline-none"
               >
                 {servicesList.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -304,7 +300,7 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                 id="edit-status"
                 value={status}
                 onChange={(e) => setStatus(e.target.value as BookingStatus)}
-                className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all cursor-pointer outline-none"
+                className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 cursor-pointer outline-none"
               >
                 {statusesList.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -328,7 +324,7 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                   setDate(e.target.value);
                   setSelectedSlot('');
                 }}
-                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all outline-none"
+                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 outline-none"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -341,7 +337,7 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                   id="edit-time-slot"
                   value={selectedSlot}
                   onChange={(e) => setSelectedSlot(e.target.value)}
-                  className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all cursor-pointer outline-none"
+                  className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 cursor-pointer outline-none"
                 >
                   <option value="">-- اختر وقت الحجز المتاح --</option>
                   {slots.map((slot) => {
@@ -374,7 +370,7 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                 type="date"
                 value={lastContactDate}
                 onChange={(e) => setLastContactDate(e.target.value)}
-                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all outline-none"
+                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 outline-none"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -384,7 +380,7 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                 type="date"
                 value={nextFollowupDate}
                 onChange={(e) => setNextFollowupDate(e.target.value)}
-                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all outline-none"
+                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 outline-none"
               />
             </div>
           </div>
@@ -401,7 +397,7 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               placeholder="مثال: طلب العميل تظليل لون أسود 20%..."
-              className="w-full p-3 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-semibold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all text-gray-800 outline-none resize-none"
+              className="w-full p-3 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-semibold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 text-gray-800 outline-none resize-none"
             />
           </div>
 
@@ -410,21 +406,22 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 text-xs font-bold text-gray-500 hover:text-gray-800 hover:bg-neutral-50 border border-neutral-200 rounded-xl transition-all"
+              className="px-5 py-2.5 text-xs font-bold text-gray-500 hover:text-gray-800 hover:bg-neutral-50 border border-neutral-200 rounded-xl transition-[background-color,color] duration-200"
             >
               تراجع
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 text-xs font-bold bg-[#F4C542] hover:bg-[#E8B923] text-gray-900 rounded-xl hover:shadow-md hover:shadow-[#F4C542]/10 transition-all"
+              className="px-6 py-2.5 text-xs font-bold bg-[#F4C542] hover:bg-[#E8B923] text-gray-900 rounded-xl hover:shadow-md hover:shadow-[#F4C542]/10 transition-[background-color,color,box-shadow] duration-200"
             >
               حفظ التعديلات المحدثة
             </button>
           </div>
         </form>
-      </motion.div>
+      </div>
     </div>
   );
 };
 
 export default React.memo(EditBookingModal);
+
