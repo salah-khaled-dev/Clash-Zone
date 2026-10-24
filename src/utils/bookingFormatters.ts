@@ -38,21 +38,19 @@ export function formatArabicDate(dateStr: string): string {
   }
 }
 
-export function formatArabicTime(timeStr: string): string {
-  if (!timeStr) return "";
+export function formatSingleArabicTime(timeStr: string): { formatted: string; period: string } | null {
+  if (!timeStr) return null;
   const clean = timeStr.trim().toUpperCase();
 
-  // Match 12-hour format: "02:00 PM"
   const match12 = clean.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
   if (match12) {
     const [, hours, minutes, ampm] = match12;
     const hr = parseInt(hours, 10);
     const formattedHour = String(hr).padStart(2, '0');
     const period = (hr === 12 && ampm === "PM") ? "ظهرًا" : (ampm === "AM" ? "صباحًا" : "مساءً");
-    return `${formattedHour}:${minutes} ${period}`;
+    return { formatted: `${formattedHour}:${minutes}`, period };
   }
 
-  // Match 24-hour format: "14:00" or "14:00:00"
   const match24 = clean.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
   if (match24) {
     const [, hours, minutes] = match24;
@@ -61,10 +59,54 @@ export function formatArabicTime(timeStr: string): string {
     const displayHour = hr === 0 ? 12 : hr > 12 ? hr - 12 : hr;
     const formattedHour = String(displayHour).padStart(2, '0');
     const period = hr === 12 ? "ظهرًا" : (isPM ? "مساءً" : "صباحًا");
-    return `${formattedHour}:${minutes} ${period}`;
+    return { formatted: `${formattedHour}:${minutes}`, period };
+  }
+
+  return null;
+}
+
+export function formatArabicTime(timeStr: string): string {
+  if (!timeStr) return "";
+  const clean = timeStr.trim();
+
+  // Check if timeStr is an interval range e.g. "12:00 PM - 01:00 PM"
+  const parts = clean.split(/\s*[-–—]\s*|\s+إلى\s+/i);
+  if (parts.length >= 2) {
+    const start = formatSingleArabicTime(parts[0]);
+    const end = formatSingleArabicTime(parts[1]);
+    if (start && end) {
+      const periodLead = start.period === end.period ? "" : ` ${start.period}`;
+      return `من ${start.formatted}${periodLead} إلى ${end.formatted} ${end.period}`;
+    }
+  }
+
+  const single = formatSingleArabicTime(clean);
+  if (single) {
+    return `${single.formatted} ${single.period}`;
   }
 
   return timeStr;
+}
+
+export function getBookingDurationBadge(timeStr: string): { label: string; duration: 30 | 60; colorClass: string } {
+  if (!timeStr) return { label: '٣٠ دقيقة', duration: 30, colorClass: 'bg-blue-50 text-blue-700 border-blue-200' };
+  const clean = timeStr.trim();
+  const parts = clean.split(/\s*[-–—]\s*|\s+إلى\s+/i);
+  if (parts.length >= 2) {
+    const start = formatSingleArabicTime(parts[0]);
+    const end = formatSingleArabicTime(parts[1]);
+    if (start && end) {
+      const [sh, sm] = start.formatted.split(':').map(Number);
+      const [eh, em] = end.formatted.split(':').map(Number);
+      const sH24 = (start.period === 'مساءً' && sh < 12) ? sh + 12 : (start.period === 'صباحًا' && sh === 12 ? 0 : sh);
+      const eH24 = (end.period === 'مساءً' && eh < 12) ? eh + 12 : (end.period === 'صباحًا' && eh === 12 ? 0 : eh);
+      const diff = (eH24 * 60 + em) - (sH24 * 60 + sm);
+      if (diff >= 45) {
+        return { label: 'ساعة كاملة', duration: 60, colorClass: 'bg-purple-50 text-purple-700 border-purple-200' };
+      }
+    }
+  }
+  return { label: '٣٠ دقيقة', duration: 30, colorClass: 'bg-blue-50 text-blue-700 border-blue-200' };
 }
 
 export function formatStatus(status: string): string {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   FiUser, 
   FiPhone, 
@@ -13,7 +13,7 @@ import {
   FiMapPin
 } from 'react-icons/fi';
 import { generateSlots } from '../utils/timeSlots';
-import type { TimeSlot } from '../utils/timeSlots';
+import type { BookingDuration } from '../utils/timeSlots';
 import { useToast } from './useToast';
 import type { Booking, BookingCategory, BookingDbStatus } from '../types/booking';
 import { WARZONE_CATEGORIES, STATUS_ARABIC_MAP } from '../types/booking';
@@ -32,7 +32,7 @@ interface BookingFormProps {
   }) => void;
 }
 
-export const BookingForm = React.memo<BookingFormProps>(({ bookings, onSubmitBooking }) => {
+export const BookingForm = React.memo<BookingFormProps>(({ onSubmitBooking }) => {
   const { showToast } = useToast();
 
   // Form Fields State
@@ -45,15 +45,9 @@ export const BookingForm = React.memo<BookingFormProps>(({ bookings, onSubmitBoo
   const [status, setStatus] = useState<BookingDbStatus>('pending');
   const [notes, setNotes] = useState('');
 
-  // Slots state
-  const [slots] = useState<TimeSlot[]>(() => generateSlots());
-
-  // Check slot availability
-  const isSlotBooked = (date: string, time: string) => {
-    return bookings.some(
-      (b) => b.booking_date === date && b.booking_time === time && b.status !== 'cancelled'
-    );
-  };
+  // Duration & Slots state
+  const [duration, setDuration] = useState<BookingDuration>(30);
+  const slots = useMemo(() => generateSlots(duration), [duration]);
 
   const handleIncrementPeople = () => {
     setNumberOfPeople((prev) => prev + 1);
@@ -85,12 +79,6 @@ export const BookingForm = React.memo<BookingFormProps>(({ bookings, onSubmitBoo
 
     if (!bookingDate || !selectedTimeSlot) {
       showToast("يرجى تحديد تاريخ ووقت الحجز.", "warning");
-      return;
-    }
-
-    // Double check duplicate slots
-    if (isSlotBooked(bookingDate, selectedTimeSlot)) {
-      showToast("هذا الموعد محجوز بالفعل! يرجى اختيار موعد آخر.", "error");
       return;
     }
 
@@ -227,8 +215,8 @@ export const BookingForm = React.memo<BookingFormProps>(({ bookings, onSubmitBoo
           </select>
         </div>
 
-        {/* Row 2: Date, Time Slot, Status */}
-        <div className="md:col-span-4 flex flex-col gap-1.5">
+        {/* Row 2: Date, Duration, Time Slot, Status */}
+        <div className="md:col-span-3 flex flex-col gap-1.5">
           <label htmlFor="form-booking-date" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
             <FiCalendar className="w-3.5 h-3.5 text-slate-400" />
             <span>تاريخ الحجز المختار *</span>
@@ -246,7 +234,44 @@ export const BookingForm = React.memo<BookingFormProps>(({ bookings, onSubmitBoo
           />
         </div>
 
-        <div className="md:col-span-5 flex flex-col gap-1.5">
+        <div className="md:col-span-3 flex flex-col gap-1.5">
+          <label className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
+            <FiClock className="w-3.5 h-3.5 text-slate-400" />
+            <span>مدة الحجز *</span>
+          </label>
+          <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200/80 h-10">
+            <button
+              type="button"
+              onClick={() => {
+                setDuration(30);
+                setSelectedTimeSlot('');
+              }}
+              className={`rounded-lg text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${
+                duration === 30
+                  ? 'bg-red-600 text-white shadow-xs font-extrabold'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              ٣٠ دقيقة
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setDuration(60);
+                setSelectedTimeSlot('');
+              }}
+              className={`rounded-lg text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${
+                duration === 60
+                  ? 'bg-red-600 text-white shadow-xs font-extrabold'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              ساعة كاملة
+            </button>
+          </div>
+        </div>
+
+        <div className="md:col-span-4 flex flex-col gap-1.5">
           <label htmlFor="form-booking-time" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
             <FiClock className="w-3.5 h-3.5 text-slate-400" />
             <span>وقت الحجز المتاح *</span>
@@ -259,18 +284,11 @@ export const BookingForm = React.memo<BookingFormProps>(({ bookings, onSubmitBoo
               className="w-full px-3 h-10 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all cursor-pointer outline-none"
             >
               <option value="">-- اختر وقت الحجز المتاح --</option>
-              {slots.map((slot) => {
-                const booked = isSlotBooked(bookingDate, slot.key);
-                return (
-                  <option 
-                    key={slot.key} 
-                    value={slot.key} 
-                    disabled={booked}
-                  >
-                    {slot.label} {booked ? '(محجوز مسبقاً)' : ''}
-                  </option>
-                );
-              })}
+              {slots.map((slot) => (
+                <option key={slot.key} value={slot.key}>
+                  {slot.label}
+                </option>
+              ))}
             </select>
           ) : (
             <div className="h-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center px-4 text-xs text-slate-400 font-medium">
@@ -279,7 +297,7 @@ export const BookingForm = React.memo<BookingFormProps>(({ bookings, onSubmitBoo
           )}
         </div>
 
-        <div className="md:col-span-3 flex flex-col gap-1.5">
+        <div className="md:col-span-2 flex flex-col gap-1.5">
           <label htmlFor="form-status" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
             <FiTag className="w-3.5 h-3.5 text-slate-400" />
             <span>الحالة الأولية *</span>

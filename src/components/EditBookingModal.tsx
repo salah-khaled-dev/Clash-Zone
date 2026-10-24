@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { FiX, FiCalendar, FiClock, FiUser, FiPhone, FiTag, FiFileText, FiUsers } from 'react-icons/fi';
 import type { Booking, BookingCategory, BookingDbStatus } from '../types/booking';
 import { WARZONE_CATEGORIES, STATUS_ARABIC_MAP } from '../types/booking';
-import { generateSlots } from '../utils/timeSlots';
-import type { TimeSlot } from '../utils/timeSlots';
+import { generateSlots, parseBookingInterval } from '../utils/timeSlots';
+import type { BookingDuration } from '../utils/timeSlots';
 import { useToast } from './useToast';
 
 interface EditBookingModalProps {
@@ -15,7 +15,6 @@ interface EditBookingModalProps {
 
 export const EditBookingModal: React.FC<EditBookingModalProps> = ({
   booking,
-  bookings,
   onClose,
   onSave
 }) => {
@@ -32,14 +31,11 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
   const [status, setStatus] = useState<BookingDbStatus>(booking.status || 'pending');
   const [notes, setNotes] = useState(booking.notes || '');
 
-  const [slots] = useState<TimeSlot[]>(() => generateSlots());
-
-  // Exclude current booking ID when checking double booking
-  const isSlotBooked = (d: string, t: string) => {
-    return bookings.some(
-      (b) => b.id !== booking.id && b.booking_date === d && b.booking_time === t && b.status !== 'cancelled'
-    );
-  };
+  // Duration & Slots state
+  const [duration, setDuration] = useState<BookingDuration>(() => {
+    return parseBookingInterval(booking.booking_time).duration;
+  });
+  const slots = useMemo(() => generateSlots(duration), [duration]);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,11 +60,6 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
 
     if (!date || !selectedSlot) {
       showToast("يرجى اختيار موعد الحجز.", "warning");
-      return;
-    }
-
-    if (isSlotBooked(date, selectedSlot)) {
-      showToast("هذا الموعد محجوز لعميل آخر! يرجى اختيار موعد آخر.", "error");
       return;
     }
 
@@ -196,8 +187,8 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
             </div>
           </div>
 
-          {/* Row 3: Date, Time & Status */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+          {/* Row 3: Date & Duration */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             <div className="flex flex-col gap-1">
               <label htmlFor="edit-booking-date" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
                 <FiCalendar className="w-3.5 h-3.5 text-slate-400" />
@@ -217,9 +208,49 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
             </div>
 
             <div className="flex flex-col gap-1">
+              <label className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
+                <FiClock className="w-3.5 h-3.5 text-slate-400" />
+                <span>مدة الحجز *</span>
+              </label>
+              <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200/80 h-10">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDuration(30);
+                    setSelectedSlot('');
+                  }}
+                  className={`rounded-lg text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${
+                    duration === 30
+                      ? 'bg-red-600 text-white shadow-xs font-extrabold'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                  }`}
+                >
+                  ٣٠ دقيقة
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDuration(60);
+                    setSelectedSlot('');
+                  }}
+                  className={`rounded-lg text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${
+                    duration === 60
+                      ? 'bg-red-600 text-white shadow-xs font-extrabold'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                  }`}
+                >
+                  ساعة كاملة
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 4: Time Slot & Status */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            <div className="flex flex-col gap-1">
               <label htmlFor="edit-booking-time" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
                 <FiClock className="w-3.5 h-3.5 text-slate-400" />
-                <span>وقت الحجز *</span>
+                <span>وقت الحجز المتاح *</span>
               </label>
               {date ? (
                 <select
@@ -229,18 +260,11 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                   className="w-full px-3 h-10 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all cursor-pointer outline-none"
                 >
                   <option value="">-- اختر الوقت --</option>
-                  {slots.map((slot) => {
-                    const booked = isSlotBooked(date, slot.key);
-                    return (
-                      <option 
-                        key={slot.key} 
-                        value={slot.key} 
-                        disabled={booked}
-                      >
-                        {slot.label} {booked ? '(محجوز)' : ''}
-                      </option>
-                    );
-                  })}
+                  {slots.map((slot) => (
+                    <option key={slot.key} value={slot.key}>
+                      {slot.label}
+                    </option>
+                  ))}
                 </select>
               ) : (
                 <div className="h-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center px-4 text-xs text-slate-400 font-medium">

@@ -23,6 +23,7 @@ import { ToastProvider } from './components/ToastProvider';
 import { useToast } from './components/useToast';
 import { Logo } from './components/Logo';
 import { formatArabicDate, formatArabicTime, formatPeopleCount, getTodayRiyadhStr } from './utils/bookingFormatters';
+import { compareTimeSlots } from './utils/timeSlots';
 import { getCategoryIcon } from './utils/translations';
 import { SignatureFooter } from './components/SignatureFooter';
 
@@ -202,7 +203,7 @@ const MainAppContent: React.FC = () => {
                       if (a.booking_date !== b.booking_date) {
                         return a.booking_date.localeCompare(b.booking_date);
                       }
-                      return a.booking_time.localeCompare(b.booking_time);
+                      return compareTimeSlots(a.booking_time, b.booking_time);
                     });
                   });
                 } else {
@@ -326,7 +327,7 @@ const MainAppContent: React.FC = () => {
             return prev.map(b => b.id === result.id ? result : b);
           }
           return [...prev, result].sort((a, b) => 
-            a.booking_date.localeCompare(b.booking_date) || a.booking_time.localeCompare(b.booking_time)
+            a.booking_date.localeCompare(b.booking_date) || compareTimeSlots(a.booking_time, b.booking_time)
           );
         });
         setActiveModal({ type: 'success', booking: result });
@@ -430,7 +431,7 @@ const MainAppContent: React.FC = () => {
   const todaysAppointments = useMemo(() => {
     return bookings
       .filter(b => b.booking_date === todayStr && !isCancelled(b.status))
-      .sort((a, b) => a.booking_time.localeCompare(b.booking_time));
+      .sort((a, b) => compareTimeSlots(a.booking_time, b.booking_time));
   }, [bookings, todayStr]);
 
   // 2. Upcoming Schedule Widget (Next 7 days)
@@ -441,7 +442,7 @@ const MainAppContent: React.FC = () => {
         if (a.booking_date !== b.booking_date) {
           return a.booking_date.localeCompare(b.booking_date);
         }
-        return a.booking_time.localeCompare(b.booking_time);
+        return compareTimeSlots(a.booking_time, b.booking_time);
       });
   }, [bookings, next7DaysStr]);
 

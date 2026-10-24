@@ -8,7 +8,7 @@ import {
   FiUsers
 } from 'react-icons/fi';
 import type { Booking } from '../types/booking';
-import { generateSlots } from '../utils/timeSlots';
+import { generateSlots, isBookingInSlot, isBookingStartOfSlot, parseBookingInterval } from '../utils/timeSlots';
 import { formatArabicDate, formatPeopleCount, getTodayRiyadhStr } from '../utils/bookingFormatters';
 import { getCategoryIcon, translateStatus } from '../utils/translations';
 
@@ -84,16 +84,23 @@ export const CalendarView = React.memo<CalendarViewProps>(({
     setBaseDate(d);
   };
 
-  const bookingsGrid = useMemo(() => {
-    const grid: Record<string, Booking> = {};
+  const cellBookings = useMemo(() => {
+    const map: Record<string, { booking: Booking; isStart: boolean; duration: number }[]> = {};
     bookings.forEach(b => {
       if (b.status !== 'cancelled') {
-        const key = `${b.booking_date}_${b.booking_time}`;
-        grid[key] = b;
+        const interval = parseBookingInterval(b.booking_time);
+        timeSlots.forEach(slot => {
+          if (isBookingInSlot(b.booking_time, slot.key)) {
+            const key = `${b.booking_date}_${slot.key}`;
+            const isStart = isBookingStartOfSlot(b.booking_time, slot.key);
+            if (!map[key]) map[key] = [];
+            map[key].push({ booking: b, isStart, duration: interval.duration });
+          }
+        });
       }
     });
-    return grid;
-  }, [bookings]);
+    return map;
+  }, [bookings, timeSlots]);
 
   const handleDragStart = (e: React.DragEvent, booking: Booking) => {
     e.dataTransfer.setData('text/plain', booking.id);
@@ -122,11 +129,33 @@ export const CalendarView = React.memo<CalendarViewProps>(({
     const booking = bookings.find(b => b.id === bookingId);
     if (!booking) return;
 
-    if (booking.booking_date === dateStr && booking.booking_time === slotKey) {
+    const bInterval = parseBookingInterval(booking.booking_time);
+    const targetSlot = timeSlots.find(s => s.key === slotKey);
+    
+    let newSlotTime = slotKey;
+    if (bInterval.duration === 60 && targetSlot) {
+      const startHour = Math.floor(targetSlot.startMinutes / 60);
+      const startMinute = targetSlot.startMinutes % 60;
+      const endMinutes = targetSlot.startMinutes + 60;
+      const endHour = Math.floor(endMinutes / 60);
+      const endMinute = endMinutes % 60;
+
+      const startIsPM = startHour >= 12;
+      const startDisplayHour = startHour === 0 ? 12 : startHour > 12 ? startHour - 12 : startHour;
+      const startFormatted = `${String(startDisplayHour).padStart(2, '0')}:${String(startMinute).padStart(2, '0')} ${startIsPM ? 'PM' : 'AM'}`;
+
+      const endIsPM = endHour >= 12;
+      const endDisplayHour = endHour === 0 ? 12 : endHour > 12 ? endHour - 12 : endHour;
+      const endFormatted = `${String(endDisplayHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')} ${endIsPM ? 'PM' : 'AM'}`;
+
+      newSlotTime = `${startFormatted} - ${endFormatted}`;
+    }
+
+    if (booking.booking_date === dateStr && booking.booking_time === newSlotTime) {
       return;
     }
 
-    onReschedule(booking, dateStr, slotKey);
+    onReschedule(booking, dateStr, newSlotTime);
   };
 
   const getStatusBorder = (status: string) => {
@@ -191,7 +220,7 @@ export const CalendarView = React.memo<CalendarViewProps>(({
 
       {/* Main Grid Wrapper */}
       <div className="w-full overflow-x-auto overflow-y-hidden pb-3 scrollbar-thin">
-        <div className="min-w-[1020px] grid grid-cols-[90px_repeat(7,1fr)] gap-2 border-collapse">
+        <div className="min-w-[1020px] grid grid-cols-[105px_repeat(7,1fr)] gap-2 border-collapse">
           {/* Top Header Row */}
           <div className="flex items-center justify-center bg-slate-100 p-2.5 rounded-xl border border-slate-200/80 font-bold text-xs text-slate-600 h-[56px]">
             الساعة
@@ -216,16 +245,17 @@ export const CalendarView = React.memo<CalendarViewProps>(({
           {timeSlots.map(slot => (
             <React.Fragment key={slot.key}>
               {/* Row Label (Time) */}
-              <div className="flex items-center justify-center bg-slate-50 border border-slate-200/80 p-2 rounded-xl text-[10px] font-bold text-slate-600 h-[86px] gap-1">
-                <FiClock className="w-3 h-3 text-slate-400" />
-                <span>{slot.label.replace("مساءً", "م").replace("ظهرًا", "ظ").replace("صباحًا", "ص")}</span>
+              <div className="flex items-center justify-center bg-slate-50 border border-slate-200/80 p-1.5 rounded-xl text-[10px] font-bold text-slate-600 h-[86px] gap-1">
+                <FiClock className="w-3 h-3 text-slate-400 shrink-0" />
+                <span className="whitespace-nowrap">{slot.shortLabel || slot.label}</span>
               </div>
 
               {/* Day Cells for this Time Slot */}
               {daysInView.map(day => {
                 const cellKey = `${day.dateStr}_${slot.key}`;
-                const booking = bookingsGrid[cellKey];
+                const entries = cellBookings[cellKey] || [];
                 const isDragOver = dragOverCell === cellKey;
+                const hasMultiple = entries.length > 1;
 
                 return (
                   <div
@@ -233,57 +263,88 @@ export const CalendarView = React.memo<CalendarViewProps>(({
                     onDragOver={(e) => handleDragOver(e, day.dateStr, slot.key)}
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, day.dateStr, slot.key)}
-                    className={`border rounded-xl p-1.5 transition-all flex flex-col justify-center min-h-[86px] h-[86px] relative ${
+                    className={`border rounded-xl p-1.5 transition-all flex flex-col justify-start min-h-[90px] relative ${
                       isDragOver 
                         ? 'bg-red-50 border-dashed border-red-400' 
-                        : booking 
-                          ? 'bg-white border-slate-200 shadow-sm' 
+                        : entries.length > 0
+                          ? 'bg-white border-slate-200 shadow-2xs' 
                           : 'bg-slate-50/50 border-slate-100 hover:bg-slate-100/60'
                     }`}
                   >
-                    {booking ? (
-                      <div
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, booking)}
-                        onClick={() => onViewDetails(booking)}
-                        className={`h-full w-full rounded-lg p-2 flex flex-col justify-between cursor-grab active:cursor-grabbing shadow-xs bg-white border border-slate-200/90 transition-all select-none hover:border-slate-300 ${getStatusBorder(booking.status)}`}
-                      >
-                        {/* Header */}
-                        <div className="flex items-center justify-between gap-1 w-full min-w-0">
-                          <span className="text-[11px] font-bold text-slate-900 truncate leading-none flex-grow">
-                            {booking.customer_name}
-                          </span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onEditTime(booking);
-                            }}
-                            className="text-slate-400 hover:text-slate-700 transition-colors p-0.5"
-                            title="تعديل الموعد"
-                          >
-                            <FiEdit3 className="w-3 h-3" />
-                          </button>
-                        </div>
+                    {entries.length > 0 ? (
+                      <div className="w-full flex flex-col gap-1.5">
+                        {hasMultiple && (
+                          <div className="text-[8px] font-black text-red-700 bg-red-50 border border-red-100 px-1 py-0.5 rounded text-center">
+                            {entries.length} حجوزات في هذا الوقت
+                          </div>
+                        )}
+                        {entries.map(({ booking, isStart, duration }) => (
+                          isStart ? (
+                            <div
+                              key={booking.id}
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, booking)}
+                              onClick={() => onViewDetails(booking)}
+                              className={`w-full rounded-lg p-2 flex flex-col justify-between cursor-grab active:cursor-grabbing shadow-xs bg-white border border-slate-200/90 transition-all select-none hover:border-slate-300 ${getStatusBorder(booking.status)}`}
+                            >
+                              {/* Header */}
+                              <div className="flex items-center justify-between gap-1 w-full min-w-0">
+                                <span className="text-[11px] font-bold text-slate-900 truncate leading-none flex-grow">
+                                  {booking.customer_name}
+                                </span>
+                                {duration === 60 && (
+                                  <span className="text-[8px] font-extrabold px-1 py-0.5 rounded bg-purple-100 text-purple-800 leading-none shrink-0">
+                                    ٦٠ د
+                                  </span>
+                                )}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onEditTime(booking);
+                                  }}
+                                  className="text-slate-400 hover:text-slate-700 transition-colors p-0.5"
+                                  title="تعديل الموعد"
+                                >
+                                  <FiEdit3 className="w-3 h-3" />
+                                </button>
+                              </div>
 
-                        {/* People & Category */}
-                        <div className="flex flex-col gap-0.5 mt-0.5 min-w-0">
-                          <span className="text-[10px] font-semibold text-slate-600 truncate flex items-center gap-1 leading-none">
-                            <FiUsers className="w-2.5 h-2.5 text-slate-400 flex-shrink-0" />
-                            <span>{formatPeopleCount(booking.number_of_people)}</span>
-                          </span>
-                          <span className="text-[9.5px] font-bold text-slate-700 truncate leading-none mt-0.5">
-                            {getCategoryIcon(booking.category)} {booking.category}
-                          </span>
-                        </div>
+                              {/* People & Category */}
+                              <div className="flex flex-col gap-0.5 mt-1 min-w-0">
+                                <span className="text-[10px] font-semibold text-slate-600 truncate flex items-center gap-1 leading-none">
+                                  <FiUsers className="w-2.5 h-2.5 text-slate-400 flex-shrink-0" />
+                                  <span>{formatPeopleCount(booking.number_of_people)}</span>
+                                </span>
+                                <span className="text-[9.5px] font-bold text-slate-700 truncate leading-none mt-0.5">
+                                  {getCategoryIcon(booking.category)} {booking.category}
+                                </span>
+                              </div>
 
-                        {/* Status Footer */}
-                        <div className="flex items-center justify-between text-[8.5px] text-slate-500 font-bold border-t border-slate-100 pt-1 mt-0.5 leading-none">
-                          <span className="truncate">الحالة</span>
-                          <span className="font-extrabold text-slate-800">{translateStatus(booking.status)}</span>
-                        </div>
+                              {/* Status Footer */}
+                              <div className="flex items-center justify-between text-[8.5px] text-slate-500 font-bold border-t border-slate-100 pt-1 mt-1 leading-none">
+                                <span className="truncate">الحالة</span>
+                                <span className="font-extrabold text-slate-800">{translateStatus(booking.status)}</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div
+                              key={`cont_${booking.id}`}
+                              onClick={() => onViewDetails(booking)}
+                              className="w-full rounded-lg p-1.5 flex flex-col justify-between cursor-pointer bg-slate-50/90 border border-dashed border-purple-200 hover:border-purple-300 transition-all text-right shadow-2xs"
+                            >
+                              <div className="flex items-center justify-between text-[9px] font-bold text-purple-900 leading-none">
+                                <span className="truncate">امتداد ({booking.customer_name})</span>
+                                <span className="text-[8px] font-black px-1 py-0.5 rounded bg-purple-100 text-purple-700">ساعة</span>
+                              </div>
+                              <span className="text-[8.5px] text-slate-400 font-medium truncate mt-0.5">
+                                تابع لنفس الحجز
+                              </span>
+                            </div>
+                          )
+                        ))}
                       </div>
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                      <div className="w-full h-full min-h-[70px] flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
                         <span className="text-[9px] font-bold text-slate-400">متاح</span>
                       </div>
                     )}
