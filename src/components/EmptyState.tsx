@@ -3,13 +3,13 @@ import { FiCalendar } from 'react-icons/fi';
 
 export const EmptyState: React.FC = () => {
   return (
-    <div className="flex flex-col items-center justify-center text-center p-12 bg-white rounded-[24px] border border-neutral-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-      <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mb-4 text-[#D4A017] border border-amber-100">
-        <FiCalendar className="w-8 h-8" />
+    <div className="flex flex-col items-center justify-center text-center p-12 bg-white rounded-2xl border border-slate-200/90 shadow-sm">
+      <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mb-3 text-slate-400 border border-slate-200">
+        <FiCalendar className="w-6 h-6" />
       </div>
-      <h3 className="text-lg font-bold text-gray-800 mb-1">لا توجد حجوزات حالياً</h3>
-      <p className="text-sm text-gray-500 max-w-sm leading-relaxed">
-        لم يتم العثور على أي حجوزات مطابقة للبحث أو الفلاتر المحددة في لوحة التحكم.
+      <h3 className="text-base font-bold text-slate-800 mb-1">لا توجد حجوزات حالياً</h3>
+      <p className="text-xs text-slate-500 max-w-sm leading-relaxed">
+        لم يتم العثور على أي حجوزات مطابقة لمعايير البحث أو الفلاتر المحددة.
       </p>
     </div>
   );

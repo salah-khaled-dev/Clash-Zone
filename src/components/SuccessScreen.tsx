@@ -1,16 +1,13 @@
 import React from 'react';
-import { FiClock, FiMapPin, FiCalendar } from 'react-icons/fi';
-import { LuCar } from 'react-icons/lu';
-import { HiSparkles } from 'react-icons/hi2';
+import { FiClock, FiCalendar, FiUsers, FiTag, FiCheck } from 'react-icons/fi';
 import type { Booking } from '../types/booking';
 import { Logo } from './Logo';
 import {
   formatArabicDate,
   formatArabicTime,
-  formatVehicleName,
-  formatServiceName
+  formatPeopleCount
 } from '../utils/bookingFormatters';
-import { translateBranch } from '../utils/translations';
+import { getCategoryIcon } from '../utils/translations';
 
 interface SuccessScreenProps {
   booking: Booking;
@@ -23,133 +20,109 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
   onViewBooking,
   onBookAnother
 }) => {
-  const vehicleStr = `${booking.vehicle_make} ${booking.vehicle_model}${booking.vehicle_year ? ` ${booking.vehicle_year}` : ''}`;
-  const displayCar = formatVehicleName(vehicleStr);
-  const displayService = formatServiceName(booking.service_type);
-  const displayBranch = translateBranch(booking.branch_name);
   const displayDate = formatArabicDate(booking.booking_date);
-  const displayTime = formatArabicTime(booking.time_slot);
+  const displayTime = formatArabicTime(booking.booking_time);
+  const peopleText = formatPeopleCount(booking.number_of_people);
+  const categoryIcon = getCategoryIcon(booking.category);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/45 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="success-title"
         aria-describedby="success-description"
-        className="bg-white rounded-[32px] p-6 lg:p-8 w-full max-w-md shadow-2xl border border-neutral-100 flex flex-col items-center text-center relative overflow-hidden animate-in zoom-in-95 duration-200"
+        className="bg-white rounded-2xl p-6 lg:p-7 w-full max-w-md shadow-xl border border-slate-200 flex flex-col items-center text-center relative overflow-hidden animate-in zoom-in-95 duration-150"
       >
-        {/* Soft Ambient Gold Glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#F4C542]/5 rounded-full filter blur-xl pointer-events-none" />
-
-        {/* Small Horizontal Brand Logo */}
-        <div className="mb-4 opacity-75">
-          <Logo size="sm" variant="icon-only" />
+        {/* Brand Logo */}
+        <div className="mb-4">
+          <Logo size="sm" variant="horizontal" />
         </div>
 
-        {/* Premium Gold Ring with SVG checkmark draw animation */}
-        <div className="relative w-20 h-20 mb-6 flex items-center justify-center flex-shrink-0">
-          <div className="absolute inset-0 rounded-full border-4 border-[#F4C542] shadow-lg shadow-[#F4C542]/10 bg-[#F4C542]/5 animate-scale-in" />
-          
-          <svg
-            className="w-10 h-10 text-[#D4A017] relative z-10"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path
-              d="M20 6L9 17L4 12"
-              className="animate-draw-check"
-            />
-          </svg>
+        {/* Clean Success Circle */}
+        <div className="w-14 h-14 mb-4 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center">
+          <FiCheck className="w-7 h-7 stroke-[2.5]" />
         </div>
 
         {/* Title */}
-        <h3 id="success-title" className="text-xl lg:text-2xl font-black text-gray-900 mb-2 leading-snug">
-          تم تأكيد الحجز الفاخر
+        <h3 id="success-title" className="text-lg font-black text-slate-900 mb-1 leading-snug">
+          تم تأكيد وتسجيل الحجز بنجاح
         </h3>
-        <p id="success-description" className="text-xs lg:text-sm text-gray-500 leading-relaxed mb-6 max-w-xs font-semibold">
-          تم حفظ موعدك بأمان في قاعدة البيانات السحابية. سيتواصل معك فريق الدعم قريباً.
+        <p id="success-description" className="text-xs text-slate-500 leading-relaxed mb-5 max-w-xs">
+          تم حفظ حجز الفعالية في قاعدة البيانات، وجاهز للمتابعة والتأكيد.
         </p>
 
-        {/* Dynamic Receipt Voucher Card */}
-        <div className="w-full bg-neutral-50 border border-neutral-200/50 rounded-2xl p-5 flex flex-col gap-4 mb-6 text-right">
-          <div className="text-[10px] font-bold text-gray-400 border-b border-neutral-200/40 pb-2.5 flex justify-between items-center">
-            <span>تفاصيل بطاقة الحجز</span>
-            <span className="text-[#D4A017] bg-[#F4C542]/10 px-2.5 py-0.5 rounded font-black text-[10px]">مؤكد سحابياً</span>
+        {/* Voucher Card */}
+        <div className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col gap-3 mb-5 text-right">
+          <div className="text-[10px] font-bold text-slate-500 border-b border-slate-200/80 pb-2 flex justify-between items-center">
+            <span>ملخص بطاقة الحجز</span>
+            <span className="text-emerald-700 bg-emerald-100/60 border border-emerald-200 px-2 py-0.5 rounded font-bold text-[10px]">
+              مؤكد بالنظام
+            </span>
           </div>
 
-          {/* Service */}
-          <div className="flex items-center gap-3">
-            <div className="p-1.5 rounded-lg bg-white border border-neutral-100 text-[#D4A017]">
-              <HiSparkles className="w-4 h-4" />
+          {/* Customer */}
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-500">
+              <FiUsers className="w-3.5 h-3.5" />
             </div>
             <div className="flex flex-col">
-              <span className="text-[9px] text-gray-400 font-bold leading-none">الخدمة</span>
-              <span className="text-xs font-extrabold text-gray-800 mt-1">{displayService}</span>
-            </div>
-          </div>
-
-          {/* Car */}
-          <div className="flex items-center gap-3">
-            <div className="p-1.5 rounded-lg bg-white border border-neutral-100 text-[#D4A017]">
-              <LuCar className="w-4 h-4" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[9px] text-gray-400 font-bold leading-none">السيارة</span>
-              <span className="text-xs font-extrabold text-gray-800 mt-1">{displayCar}</span>
+              <span className="text-[10px] text-slate-500 font-bold leading-none">العميل والمشاركين</span>
+              <span className="text-xs font-bold text-slate-900 mt-1">
+                {booking.customer_name} ({peopleText})
+              </span>
             </div>
           </div>
 
-          {/* Branch */}
-          <div className="flex items-center gap-3">
-            <div className="p-1.5 rounded-lg bg-white border border-neutral-100 text-gray-400">
-              <FiMapPin className="w-4 h-4" />
+          {/* Category */}
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-500">
+              <FiTag className="w-3.5 h-3.5" />
             </div>
             <div className="flex flex-col">
-              <span className="text-[9px] text-gray-400 font-bold leading-none">الفرع</span>
-              <span className="text-xs font-extrabold text-gray-800 mt-1">{displayBranch}</span>
+              <span className="text-[10px] text-slate-500 font-bold leading-none">فئة الحجز</span>
+              <span className="text-xs font-bold text-slate-800 mt-1 flex items-center gap-1">
+                <span>{categoryIcon}</span>
+                <span>{booking.category}</span>
+              </span>
             </div>
           </div>
 
           {/* Date & Time Grid */}
-          <div className="grid grid-cols-2 gap-2 border-t border-neutral-200/40 pt-3.5">
+          <div className="grid grid-cols-2 gap-2 border-t border-slate-200/80 pt-2.5">
             <div className="flex items-center gap-2">
-              <FiCalendar className="w-4 h-4 text-[#D4A017]" />
+              <FiCalendar className="w-3.5 h-3.5 text-slate-400" />
               <div className="flex flex-col">
-                <span className="text-[9px] text-gray-400 font-bold leading-none">التاريخ</span>
-                <span className="text-xs font-extrabold text-gray-700 mt-1">{displayDate}</span>
+                <span className="text-[10px] text-slate-500 font-bold leading-none">التاريخ</span>
+                <span className="text-xs font-bold text-slate-800 mt-0.5">{displayDate}</span>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <FiClock className="w-4 h-4 text-[#D4A017]" />
+              <FiClock className="w-3.5 h-3.5 text-slate-400" />
               <div className="flex flex-col">
-                <span className="text-[9px] text-gray-400 font-bold leading-none">الموعد</span>
-                <span className="text-xs font-extrabold text-[#D4A017] mt-1">{displayTime}</span>
+                <span className="text-[10px] text-slate-500 font-bold leading-none">الموعد المحدد</span>
+                <span className="text-xs font-bold text-slate-800 mt-0.5">{displayTime}</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col gap-2.5 w-full">
+        <div className="flex flex-col gap-2 w-full">
           <button
             type="button"
             onClick={onViewBooking}
-            className="w-full py-3.5 bg-gradient-to-r from-[#F4C542] to-[#FFD95A] hover:from-[#E8B923] hover:to-[#F4C542] text-gray-900 rounded-xl font-bold text-sm shadow-md shadow-[#F4C542]/10 transition-[background-color,color] duration-250 flex items-center justify-center gap-2"
+            className="btn-primary-luxury w-full py-2.5 text-xs font-bold"
           >
-            <span>عرض حجوزاتي في Dashboard</span>
+            <span>عرض الحجز في لوحة التحكم</span>
           </button>
           
           <button
             type="button"
             onClick={onBookAnother}
-            className="w-full py-3 bg-white hover:bg-neutral-50 text-gray-600 border border-neutral-200 rounded-xl font-bold text-sm transition-[background-color] duration-200"
+            className="w-full py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl font-bold text-xs transition-colors cursor-pointer"
           >
-            حجز خدمة أخرى
+            تسجيل حجز آخر
           </button>
         </div>
       </div>
@@ -158,4 +131,3 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
 };
 
 export default React.memo(SuccessScreen);
-

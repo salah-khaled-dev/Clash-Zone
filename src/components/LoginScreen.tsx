@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { FiMail, FiLock, FiAlertCircle } from 'react-icons/fi';
+import { FiMail, FiLock, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 import { supabase } from '../lib/supabase';
 import { useToast } from './useToast';
-import Logo from './Logo';
-import ppfInstallationImg from '../assets/ppf_installation.webp';
+import warzoneArenaImg from '../assets/warzone_arena.webp';
+import warzoneOfficialBadge from '../assets/warzone_official_badge.webp';
 import SignatureFooter from './SignatureFooter';
 
 interface LoginScreenProps {
@@ -18,16 +18,6 @@ export const LoginScreen = React.memo<LoginScreenProps>(({ onLoginSuccess }) => 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (window.innerWidth < 768) return;
-    const { clientX, clientY } = e;
-    const { innerWidth, innerHeight } = window;
-    const x = (clientX / innerWidth) - 0.5;
-    const y = (clientY / innerHeight) - 0.5;
-    setMousePosition({ x, y });
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,9 +46,7 @@ export const LoginScreen = React.memo<LoginScreenProps>(({ onLoginSuccess }) => 
       } else if (data.session) {
         showToast("أهلاً بك! تم تسجيل الدخول بنجاح", "success");
         setIsSuccess(true);
-        setTimeout(() => {
-          onLoginSuccess();
-        }, 850);
+        onLoginSuccess();
       }
     } catch (err) {
       console.error("Authentication exception:", err);
@@ -71,135 +59,119 @@ export const LoginScreen = React.memo<LoginScreenProps>(({ onLoginSuccess }) => 
   };
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] flex flex-col items-center justify-center p-4 lg:p-8 gap-4 overflow-hidden" dir="rtl">
-      {/* Container card with entrance & success exit fade */}
-      <div 
-        onMouseMove={handleMouseMove}
-        className={`w-full max-w-[1100px] bg-white rounded-[32px] overflow-hidden shadow-2xl border border-neutral-100 flex flex-col md:grid md:grid-cols-12 min-h-[600px] lg:min-h-[640px] relative transition-[transform,opacity] duration-[800ms] cubic-bezier-[0.16,1,0.3,1] ${
-          isSuccess ? 'opacity-0 -translate-y-6 scale-[0.96]' : 'animate-login-enter'
-        }`}
-      >
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-between w-full" dir="rtl">
+      {/* Container card in clean light style */}
+      <div className="flex-1 flex items-center justify-center p-4 lg:p-8">
+        <div 
+          className="w-full max-w-[1000px] bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200/90 flex flex-col md:grid md:grid-cols-12 min-h-[580px] relative animate-fade-in"
+        >
         
-        {/* Right side: Premium Visual Image of PPF detailing (Col span 7 on desktop) */}
-        <div className="hidden md:flex md:flex-col md:col-span-7 relative overflow-hidden justify-end p-8 select-none">
-          {/* Background image with Ken Burns slow zoom in effect & Parallax */}
-          <div
-            className="absolute inset-0 w-full h-full"
-            style={{
-              transform: `translate3d(${mousePosition.x * -12}px, ${mousePosition.y * -12}px, 0)`,
-              transition: "transform 1.6s cubic-bezier(0.16, 1, 0.3, 1)"
-            }}
-          >
+        {/* Right side: Modern Visual Info Panel */}
+       <div className="hidden md:flex md:flex-col md:col-span-6 relative overflow-hidden justify-between p-8 bg-slate-100 border-l border-slate-200 select-none">
+  <div className="absolute inset-0 w-full h-full opacity-80">
             <img 
-              src={ppfInstallationImg} 
-              alt="Luxury Car PPF Detailing" 
-              className="w-full h-full object-cover animate-login-img"
+              src={warzoneArenaImg} 
+              alt="War Zone Arena" 
+              className="w-full h-full object-cover"
             />
           </div>
-          {/* Dark gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/20" />
-
-          {/* Noise background overlay */}
-          <div className="noise-bg" />
-
-          {/* Faint Golden Light Sweep */}
-          <div className="light-sweep-effect" />
-
-          {/* Floating Golden Orb - slow rotation & floating */}
-          <div 
-            className="absolute top-1/4 left-1/4 w-[280px] h-[280px] rounded-full bg-gradient-to-tr from-[#D4A017]/10 to-[#F4C542]/5 blur-[75px] pointer-events-none animate-orb-float"
-          />
-
-          {/* Animated Gold Mesh */}
-          <div className="absolute inset-0 opacity-15 pointer-events-none overflow-hidden mix-blend-screen">
-            <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <defs>
-                <radialGradient id="meshGrad1" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#F4C542" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#F4C542" stopOpacity="0" />
-                </radialGradient>
-              </defs>
-              <circle 
-                cx="30" cy="40" r="35" 
-                fill="url(#meshGrad1)"
-                className="animate-circle-move-1"
-              />
-              <circle 
-                cx="70" cy="65" r="30" 
-                fill="url(#meshGrad1)"
-                className="animate-circle-move-2"
-              />
-            </svg>
+          
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-[#0c0e14] border border-slate-700/80 p-1 flex items-center justify-center shadow-xs">
+                <img 
+                  src={warzoneOfficialBadge} 
+                  alt="War Zone Mark" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <span className="text-xs font-black text-slate-800 tracking-wider">WAR ZONE</span>
+            </div>
+            <span className="text-[11px] font-bold text-red-700 bg-red-50 border border-red-200 px-3 py-1 rounded-full">
+ادارة الحجوزات             </span>
           </div>
 
-          {/* Glassmorphic card matching the reference layout - Centered & Floating & Parallax */}
-          <div 
-            style={{
-              transform: `translate3d(${mousePosition.x * 10}px, ${mousePosition.y * 10}px, 0)`,
-              transition: "transform 1.6s cubic-bezier(0.16, 1, 0.3, 1)"
-            }}
-            className="z-10 bg-black/45 border border-white/[0.08] backdrop-blur-md rounded-2xl p-6 text-center max-w-lg mx-auto mb-4 shadow-2xl w-full flex flex-col items-center animate-fade-in-up"
-          >
-            <div className="w-full flex flex-col items-center animate-float">
-              <h4 className="text-lg font-black text-white mb-2">متابعة حالة الحجوزات والمبيعات</h4>
-              <p className="text-[11px] text-gray-300 font-bold leading-relaxed mb-4 text-center">
-                شاشة التحكم المتقدمة لمتابعة طلبات حماية طلاء السيارات PPF والعوازل الحرارية بكل سهولة ودقة لمركز إنفينيتي برايت.
-              </p>
-              
-              {/* Visual Pagination indicators */}
-              <div className="flex items-center gap-1.5 justify-center">
-                <span className="w-4.5 h-1.5 rounded-full bg-[#F4C542] transition-all" />
-                <span className="w-1.5 h-1.5 rounded-full bg-white/40" />
-                <span className="w-1.5 h-1.5 rounded-full bg-white/40" />
+          <div className="relative z-10 bg-white/95 backdrop-blur-xs rounded-xl p-6 border border-slate-200/90 shadow-xs">
+            <h4 className="text-base font-black text-slate-900 mb-2">منظومة إدارة حجوزات War Zone</h4>
+            <p className="text-xs text-slate-600 leading-relaxed mb-4">
+              منصة شاملة لتنسيق جداول الفعاليات، أعياد الميلاد، والزيارات المدرسية والجامعية، مع تتبع فوري لمواعيد وعدد المشاركين.
+            </p>
+
+            <div className="flex flex-col gap-2 pt-2 border-t border-slate-150 text-xs text-slate-700 font-medium">
+              <div className="flex items-center gap-2">
+                <FiCheckCircle className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                <span>متابعة فورية للحجوزات وتحديثات Realtime</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FiCheckCircle className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                <span>إعادة جدولة تفاعلية للمواعيد والأوقات</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FiCheckCircle className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                <span>تصدير سريع للبيانات وتقارير الحضور</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Left side: Login Form (Col span 5 on desktop) */}
-        <div className="md:col-span-5 p-8 lg:p-12 flex flex-col justify-between bg-white text-right relative z-10">
+        {/* Left side: Login Form */}
+        <div className="md:col-span-6 p-8 lg:p-12 flex flex-col justify-between bg-white text-right relative z-10">
           <div>
-            {/* Logo and Header with fade down */}
-            <div className="flex justify-start mb-10 animate-fade-in-down">
-              <Logo size="md" variant="horizontal" />
+            {/* Official War Zone Brand Header */}
+            <div className="flex items-center gap-4 mb-7 pb-5 border-b border-slate-150">
+              <div className="w-14 h-14 rounded-2xl bg-[#0c0e14] border border-slate-800/90 shadow-sm flex items-center justify-center p-1.5 flex-shrink-0">
+                <img 
+                  src={warzoneOfficialBadge} 
+                  alt="War Zone Official Logo" 
+                  className="w-full h-full object-contain select-none"
+                  loading="eager"
+                />
+              </div>
+              <div className="flex flex-col text-right">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-black text-slate-900 tracking-wider font-sans">
+                    WAR ZONE
+                  </span>
+                  <span className="text-[10px] font-black text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-md">
+                    وار زون
+                  </span>
+                </div>
+                <span className="text-xs font-semibold text-slate-500 mt-0.5">
+                  نظام إدارة الحجوزات والفعاليات
+                </span>
+              </div>
             </div>
 
-            {/* Title with fade slide */}
-            <div className="animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
-              <h2 className="text-2xl font-black text-gray-900 mb-2">مرحباً بك مجدداً</h2>
-              <p className="text-xs font-bold text-gray-400 mb-8">تسجيل الدخول إلى لوحة المتابعة وإدارة علاقات العملاء CRM</p>
+            {/* Title */}
+            <div className="mb-6">
+              <h2 className="text-xl font-black text-slate-900 mb-1">تسجيل الدخول للنظام</h2>
+              <p className="text-xs text-slate-500">أدخل بيانات الحساب للوصول إلى لوحة إدارة الحجوزات</p>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleLogin} className="flex flex-col gap-4">
+            <form onSubmit={handleLogin} className="flex flex-col gap-3.5">
               
-              {/* Email Input */}
-              <div 
-                className="flex flex-col gap-1.5 animate-fade-in-up" 
-                style={{ animationDelay: '0.3s' }}
-              >
-                <label htmlFor="login-email" className="text-[11px] font-bold text-gray-500 pr-1 flex items-center gap-1.5">
-                  <FiMail className="w-3.5 h-3.5 text-gray-400" />
+              {/* Email */}
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="login-email" className="text-[11px] font-bold text-slate-700 pr-1 flex items-center gap-1.5">
+                  <FiMail className="w-3.5 h-3.5 text-slate-400" />
                   <span>البريد الإلكتروني *</span>
                 </label>
                 <input
                   id="login-email"
                   type="email"
                   required
-                  placeholder="admin@bright.com"
+                  placeholder="admin@warzone.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-semibold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-300 text-gray-800 outline-none"
+                  className="w-full px-3.5 h-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 placeholder-slate-400 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all outline-none"
                 />
               </div>
 
-              {/* Password Input */}
-              <div 
-                className="flex flex-col gap-1.5 animate-fade-in-up" 
-                style={{ animationDelay: '0.4s' }}
-              >
-                <label htmlFor="login-password" className="text-[11px] font-bold text-gray-500 pr-1 flex items-center gap-1.5">
-                  <FiLock className="w-3.5 h-3.5 text-gray-400" />
+              {/* Password */}
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="login-password" className="text-[11px] font-bold text-slate-700 pr-1 flex items-center gap-1.5">
+                  <FiLock className="w-3.5 h-3.5 text-slate-400" />
                   <span>كلمة المرور *</span>
                 </label>
                 <input
@@ -209,62 +181,44 @@ export const LoginScreen = React.memo<LoginScreenProps>(({ onLoginSuccess }) => 
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-bold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-300 text-gray-800 outline-none"
+                  className="w-full px-3.5 h-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 placeholder-slate-400 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all outline-none"
                 />
               </div>
 
               {/* Error Box */}
               {errorMsg && (
                 <div 
-                  className="p-3 bg-rose-50 border border-rose-100 rounded-xl text-xs font-bold text-rose-600 flex items-start gap-2 mt-2 leading-relaxed animate-scale-in"
+                  className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-bold text-rose-700 flex items-start gap-2 mt-1 leading-relaxed"
                 >
-                  <FiAlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <FiAlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-rose-600" />
                   <span>{errorMsg}</span>
                 </div>
               )}
 
-              {/* Submit Button wrapper with micro-interactions & progress sweep */}
-              <div className="animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+              {/* Submit Button */}
+              <div className="mt-3">
                 <button
                   type="submit"
                   disabled={loading || isSuccess}
-                  className="relative overflow-hidden w-full h-12 bg-gradient-to-r from-[#F4C542] via-[#E8B923] to-[#F4C542] bg-[length:200%_auto] hover:bg-right transition-[background-position,box-shadow,transform] duration-500 disabled:bg-[#F4C542]/50 disabled:cursor-not-allowed text-gray-900 font-extrabold rounded-xl shadow-md hover:shadow-[#F4C542]/20 flex items-center justify-center gap-2 mt-4 cursor-pointer text-sm outline-none login-submit-btn"
+                  className="btn-primary-luxury w-full h-11 text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSuccess ? (
-                    <div 
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent z-0 animate-sweep"
-                      style={{ transform: "skewX(-20deg)" }}
-                    />
-                  ) : null}
                   {loading || isSuccess ? (
-                    <div className="w-5 h-5 border-2 border-gray-900 border-t-transparent rounded-full animate-spin z-10" />
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <span className="z-10">تسجيل الدخول</span>
+                    <span>تسجيل الدخول إلى النظام</span>
                   )}
                 </button>
               </div>
 
             </form>
           </div>
-
-          {/* Footer Info */}
-          <div 
-            className="mt-10 pt-4 border-t border-neutral-100 flex flex-col gap-2.5 text-right animate-fade-in"
-            style={{ animationDelay: '0.6s' }}
-          >
-            <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold leading-normal">
-              <span>⚠️ هل تواجه مشكلة؟</span>
-              <span className="text-gray-500 font-extrabold cursor-pointer hover:underline">مركز المساعدة والدعم</span>
-            </div>
-            <span className="text-[9px] text-gray-400 font-semibold">إنفينيتي برايت © 2026. جميع الحقوق محفوظة.</span>
-          </div>
         </div>
 
+        </div>
       </div>
-      <SignatureFooter />
+      <SignatureFooter showNav={false} />
     </div>
   );
 });
 
 export default LoginScreen;
-

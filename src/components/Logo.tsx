@@ -1,10 +1,9 @@
 import React from 'react';
-import logoImg from '../assets/logo.webp';
+import warzoneOfficialBadge from '../assets/warzone_official_badge.webp';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   variant?: 'default' | 'icon-only' | 'horizontal';
-  monochrome?: boolean;
   className?: string;
 }
 
@@ -13,43 +12,45 @@ export const Logo = React.memo<LogoProps>(({
   variant = 'default',
   className = ''
 }) => {
-  // Size mappings for image height and text sizes
   const sizeClasses = {
     sm: {
-      img: 'h-8 w-auto',
-      textAr: 'text-base',
-      textEn: 'text-[9px]',
-      gap: 'gap-2'
-    },
-    md: {
-      img: 'h-12 w-auto',
-      textAr: 'text-xl',
-      textEn: 'text-[11px]',
+      badge: 'w-8 h-8 rounded-lg p-0.5',
+      textAr: 'text-sm font-black',
+      textEn: 'text-[10px]',
       gap: 'gap-2.5'
     },
+    md: {
+      badge: 'w-10 h-10 rounded-xl p-1',
+      textAr: 'text-base font-black',
+      textEn: 'text-[11px]',
+      gap: 'gap-3'
+    },
     lg: {
-      img: 'h-20 w-auto',
-      textAr: 'text-3xl',
-      textEn: 'text-[14px]',
-      gap: 'gap-4'
+      badge: 'w-14 h-14 rounded-2xl p-1.5',
+      textAr: 'text-xl font-black',
+      textEn: 'text-xs',
+      gap: 'gap-3.5'
     },
     xl: {
-      img: 'h-32 w-auto',
-      textAr: 'text-5xl',
-      textEn: 'text-[18px]',
-      gap: 'gap-6'
+      badge: 'w-18 h-18 rounded-2xl p-2',
+      textAr: 'text-2xl font-black',
+      textEn: 'text-sm',
+      gap: 'gap-4'
     }
   };
 
   const currentSize = sizeClasses[size];
 
-  // Image Element
+  // Official War Zone Logo Symbol Emblem
   const logoSymbol = (
-    <img
-      src={logoImg}
-      alt="Infinity Bright Logo"
-      className={`${currentSize.img} object-contain drop-shadow-[0_2px_8px_rgba(244,197,66,0.12)] logo-img-hover`}
-    />
+    <div className={`relative flex items-center justify-center flex-shrink-0 bg-[#0c0e14] border border-slate-800/90 rounded-xl shadow-xs overflow-hidden ${currentSize.badge}`}>
+      <img
+        src={warzoneOfficialBadge}
+        alt="War Zone Official Logo"
+        className="w-full h-full object-contain select-none"
+        loading="eager"
+      />
+    </div>
   );
 
   if (variant === 'icon-only') {
@@ -57,18 +58,17 @@ export const Logo = React.memo<LogoProps>(({
   }
 
   const logoText = (
-    <div className="flex flex-col text-right select-none gap-1 md:gap-1.5">
-      <span
-        className={`${currentSize.textAr} font-extrabold tracking-tight text-gray-900 leading-tight`}
-        style={{ fontFamily: "'Cairo', 'Tajawal', sans-serif" }}
-      >
-        انفينيتي برايت
-      </span>
-      <span
-        className={`${currentSize.textEn} font-black tracking-widest bg-gradient-to-r from-[#F4C542] via-[#FFD95A] to-[#D4A017] bg-clip-text text-transparent uppercase leading-none`}
-        style={{ fontFamily: "'Cairo', 'Tajawal', sans-serif" }}
-      >
-        Infinity Bright
+    <div className="flex flex-col text-right select-none">
+      <div className="flex items-center gap-2">
+        <span className={`${currentSize.textAr} text-slate-900 tracking-wider leading-tight`}>
+          WAR ZONE
+        </span>
+        <span className="text-[10px] font-black text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-md leading-none">
+          وار زون
+        </span>
+      </div>
+      <span className={`${currentSize.textEn} font-bold text-slate-500 tracking-wide mt-0.5 leading-none`}>
+        نظام إدارة الحجوزات
       </span>
     </div>
   );
@@ -82,7 +82,6 @@ export const Logo = React.memo<LogoProps>(({
     );
   }
 
-  // Default block stack
   return (
     <div className={`flex flex-col items-center text-center ${currentSize.gap} ${className}`}>
       {logoSymbol}
@@ -92,4 +91,3 @@ export const Logo = React.memo<LogoProps>(({
 });
 
 export default Logo;
-

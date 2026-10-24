@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { FiX, FiCalendar, FiClock, FiUser, FiPhone, FiShare2, FiTag, FiFileText } from 'react-icons/fi';
-import { LuCar } from 'react-icons/lu';
-import { HiSparkles } from 'react-icons/hi2';
-import type { Booking, BookingStatus, CustomerSource, CustomerType } from '../types/booking';
+import { FiX, FiCalendar, FiClock, FiUser, FiPhone, FiTag, FiFileText, FiUsers } from 'react-icons/fi';
+import type { Booking, BookingCategory, BookingDbStatus } from '../types/booking';
+import { WARZONE_CATEGORIES, STATUS_ARABIC_MAP } from '../types/booking';
 import { generateSlots } from '../utils/timeSlots';
 import type { TimeSlot } from '../utils/timeSlots';
 import { useToast } from './useToast';
@@ -22,39 +21,23 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
 }) => {
   const { showToast } = useToast();
 
-  // Form states matching database schema
   const [customerName, setCustomerName] = useState(booking.customer_name);
-  const [customerPhone, setCustomerPhone] = useState(booking.customer_phone);
-  const [customerSource, setCustomerSource] = useState<CustomerSource>(booking.customer_source || 'انستغرام');
-  const [customerType, setCustomerType] = useState<CustomerType>(booking.customer_type || 'new');
-  
-  const [vehicleMake, setVehicleMake] = useState(booking.vehicle_make);
-  const [vehicleModel, setVehicleModel] = useState(booking.vehicle_model);
-  const [vehicleYear, setVehicleYear] = useState(booking.vehicle_year || '');
-  
-  const [serviceType, setServiceType] = useState(booking.service_type);
+  const [phone, setPhone] = useState(booking.phone);
+  const [numberOfPeople, setNumberOfPeople] = useState<number>(booking.number_of_people || 1);
+  const [category, setCategory] = useState<BookingCategory>(
+    (booking.category as BookingCategory) || 'عميل جديد'
+  );
   const [date, setDate] = useState(booking.booking_date);
-  const [selectedSlot, setSelectedSlot] = useState(booking.time_slot);
-  const [status, setStatus] = useState<BookingStatus>(booking.status || 'جديد');
+  const [selectedSlot, setSelectedSlot] = useState(booking.booking_time);
+  const [status, setStatus] = useState<BookingDbStatus>(booking.status || 'pending');
   const [notes, setNotes] = useState(booking.notes || '');
 
-  // Follow-up dates states (convert to simple YYYY-MM-DD for inputs)
-  const getInitialDateStr = (isoStr: string | null) => {
-    if (!isoStr) return '';
-    return isoStr.split('T')[0];
-  };
-
-  const [lastContactDate, setLastContactDate] = useState(getInitialDateStr(booking.last_contact_date));
-  const [nextFollowupDate, setNextFollowupDate] = useState(getInitialDateStr(booking.next_followup_date));
-
   const [slots] = useState<TimeSlot[]>(() => generateSlots());
-
-  const todayStr = new Date().toISOString().split('T')[0];
 
   // Exclude current booking ID when checking double booking
   const isSlotBooked = (d: string, t: string) => {
     return bookings.some(
-      (b) => b.id !== booking.id && b.booking_date === d && b.time_slot === t && b.status !== 'ملغي'
+      (b) => b.id !== booking.id && b.booking_date === d && b.booking_time === t && b.status !== 'cancelled'
     );
   };
 
@@ -62,18 +45,20 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
     e.preventDefault();
 
     if (!customerName.trim() || customerName.trim().length < 3) {
-      showToast("يرجى كتابة الاسم الكامل للعميل.", "warning");
+      showToast("يرجى كتابة الاسم الكامل للعميل (٣ أحرف على الأقل).", "warning");
       return;
     }
     
-    const phoneRegex = /^05\d{8}$/;
-    if (!phoneRegex.test(customerPhone.trim())) {
-      showToast("رقم الجوال غير صحيح! يجب أن يتكون من 10 أرقام ويبدأ بـ 05.", "warning");
+    // Support Saudi (05xxxxxxxx), Egyptian (01xxxxxxxxx / 011xxxxxxxx), and general standard mobile numbers
+    const phoneRegex = /^(05\d{8}|01\d{9}|011\d{8}|\+?\d{9,15})$/;
+    if (!phoneRegex.test(phone.trim().replace(/[\s-]/g, ''))) {
+      showToast("رقم الجوال غير صحيح! يرجى إدخال رقم هاتف صالح.", "warning");
       return;
     }
 
-    if (!vehicleMake.trim() || !vehicleModel.trim()) {
-      showToast("يرجى كتابة الشركة المصنعة وموديل السيارة.", "warning");
+    const count = Math.floor(Number(numberOfPeople));
+    if (isNaN(count) || count < 1) {
+      showToast("عدد الأفراد يجب أن يكون رقماً موجباً (١ على الأقل).", "warning");
       return;
     }
 
@@ -87,93 +72,59 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
       return;
     }
 
-    // Assemble updated object
     const updatedData: Partial<Booking> = {
       customer_name: customerName.trim(),
-      customer_phone: customerPhone.trim(),
-      customer_source: customerSource,
-      customer_type: customerType,
-      vehicle_make: vehicleMake.trim(),
-      vehicle_model: vehicleModel.trim(),
-      vehicle_year: vehicleYear.trim() || null,
-      service_type: serviceType,
+      phone: phone.trim(),
+      number_of_people: count,
+      category: category,
       booking_date: date,
-      time_slot: selectedSlot,
+      booking_time: selectedSlot,
       status: status,
-      notes: notes.trim() || null,
-      // Format simple date back to ISO format if set
-      last_contact_date: lastContactDate ? new Date(lastContactDate).toISOString() : null,
-      next_followup_date: nextFollowupDate ? new Date(nextFollowupDate).toISOString() : null
+      notes: notes.trim() || null
     };
 
     onSave(booking.id, updatedData);
   };
 
-  const servicesList = [
-    "حماية الطلاء PPF",
-    "نانو سيراميك",
-    "عزل حراري",
-    "غسيل وتلميع",
-    "خدمة أخرى"
-  ];
-
-  const sourcesList = [
-    "انستغرام",
-    "تيك توك",
-    "سناب شات",
-    "واتساب",
-    "اتصال هاتفي",
-    "زيارة مباشرة",
-    "صديق / توصية",
-    "جوجل",
-    "إعلان ممول",
-    "وكالة",
-    "أخرى"
-  ];
-
-  const typesList = [
-    { key: "new", label: "عميل جديد" },
-    { key: "returning", label: "عميل سابق" },
-    { key: "vip", label: "عميل VIP" },
-    { key: "referred", label: "عميل محول من عميل آخر" }
-  ] as const;
-
-  const statusesList: BookingStatus[] = [
-    "جديد",
-    "تم التواصل",
-    "تم التأكيد",
-    "مكتمل",
-    "ملغي"
+  const statusesList: { value: BookingDbStatus; label: string }[] = [
+    { value: 'pending', label: STATUS_ARABIC_MAP.pending },
+    { value: 'confirmed', label: STATUS_ARABIC_MAP.confirmed },
+    { value: 'completed', label: STATUS_ARABIC_MAP.completed },
+    { value: 'cancelled', label: STATUS_ARABIC_MAP.cancelled },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/45 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-booking-title"
-        className="bg-white rounded-[32px] p-6 lg:p-8 w-full max-w-xl shadow-2xl border border-neutral-100 flex flex-col text-right relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200"
+        className="bg-white rounded-2xl p-6 lg:p-7 w-full max-w-xl shadow-xl border border-slate-200 flex flex-col text-right relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-150"
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 left-5 p-2.5 text-gray-400 hover:text-gray-700 hover:bg-neutral-50 rounded-full transition-[background-color,color] duration-250"
+          className="absolute top-5 left-5 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
           aria-label="إغلاق"
         >
           <FiX className="w-5 h-5" />
         </button>
 
         {/* Header */}
-        <h3 id="edit-booking-title" className="text-xl font-extrabold text-gray-900 mb-1 pr-1">تعديل بيانات العميل والموعد</h3>
-        <p className="text-xs font-bold text-gray-400 mb-5 pr-1">تحديث سجل العميل في نظام الـ CRM</p>
+        <h3 id="edit-booking-title" className="text-lg font-black text-slate-900 mb-1 pr-1">
+          تعديل حجز الفعالية
+        </h3>
+        <p className="text-xs text-slate-500 mb-5 pr-1">
+          تحديث تفاصيل الحجز وعدد الأفراد في النظام
+        </p>
 
-        <form onSubmit={handleSave} className="flex flex-col gap-4">
+        <form onSubmit={handleSave} className="flex flex-col gap-3.5">
           
           {/* Row 1: Name & Phone */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit-customer-name" className="text-[11px] font-bold text-gray-400 pr-1 flex items-center gap-1">
-                <FiUser className="w-3.5 h-3.5" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="edit-customer-name" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
+                <FiUser className="w-3.5 h-3.5 text-slate-400" />
                 <span>اسم العميل الكامل *</span>
               </label>
               <input
@@ -182,164 +133,102 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                 required
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="الاسم الكامل"
-                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-semibold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 text-gray-800 outline-none"
+                className="w-full px-3.5 h-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all outline-none"
               />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit-customer-phone" className="text-[11px] font-bold text-gray-400 pr-1 flex items-center gap-1">
-                <FiPhone className="w-3.5 h-3.5" />
+
+            <div className="flex flex-col gap-1">
+              <label htmlFor="edit-phone" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
+                <FiPhone className="w-3.5 h-3.5 text-slate-400" />
                 <span>رقم الجوال *</span>
               </label>
               <input
-                id="edit-customer-phone"
+                id="edit-phone"
                 type="tel"
                 required
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-bold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 text-gray-800 outline-none"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full px-3.5 h-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all outline-none"
                 dir="ltr"
                 style={{ textAlign: 'right' }}
               />
             </div>
           </div>
 
-          {/* Row 2: Customer Source & Customer Type */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit-customer-source" className="text-[11px] font-bold text-gray-400 pr-1 flex items-center gap-1">
-                <FiShare2 className="w-3.5 h-3.5" />
-                <span>مصدر العميل *</span>
-              </label>
-              <select
-                id="edit-customer-source"
-                value={customerSource}
-                onChange={(e) => setCustomerSource(e.target.value as CustomerSource)}
-                className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 cursor-pointer outline-none"
-              >
-                {sourcesList.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit-customer-type" className="text-[11px] font-bold text-gray-400 pr-1 flex items-center gap-1">
-                <FiTag className="w-3.5 h-3.5" />
-                <span>نوع العميل *</span>
-              </label>
-              <select
-                id="edit-customer-type"
-                value={customerType}
-                onChange={(e) => setCustomerType(e.target.value as CustomerType)}
-                className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 cursor-pointer outline-none"
-              >
-                {typesList.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
-              </select>
-            </div>
-          </div>
-
-          {/* Row 3: Vehicle details */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit-vehicle-make" className="text-[11px] font-bold text-gray-400 pr-1 flex items-center gap-1">
-                <LuCar className="w-3.5 h-3.5" />
-                <span>نوع السيارة *</span>
+          {/* Row 2: People Count & Category */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="edit-number-of-people" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
+                <FiUsers className="w-3.5 h-3.5 text-slate-400" />
+                <span>عدد الأفراد المشاركين *</span>
               </label>
               <input
-                id="edit-vehicle-make"
-                type="text"
+                id="edit-number-of-people"
+                type="number"
+                min="1"
                 required
-                value={vehicleMake}
-                onChange={(e) => setVehicleMake(e.target.value)}
-                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-semibold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 text-gray-800 outline-none"
+                value={numberOfPeople}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10);
+                  setNumberOfPeople(isNaN(val) ? 1 : Math.max(1, val));
+                }}
+                className="w-full px-3.5 h-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-black text-slate-900 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all outline-none"
               />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit-vehicle-model" className="text-[11px] font-bold text-gray-400 pr-1">الموديل</label>
-              <input
-                id="edit-vehicle-model"
-                type="text"
-                required
-                value={vehicleModel}
-                onChange={(e) => setVehicleModel(e.target.value)}
-                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-semibold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 text-gray-800 outline-none"
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit-vehicle-year" className="text-[11px] font-bold text-gray-400 pr-1">سنة الصنع</label>
-              <input
-                id="edit-vehicle-year"
-                type="text"
-                value={vehicleYear}
-                onChange={(e) => setVehicleYear(e.target.value)}
-                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-bold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 text-gray-800 outline-none"
-              />
-            </div>
-          </div>
 
-          {/* Row 4: Service & Status */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit-service-type" className="text-[11px] font-bold text-gray-400 pr-1 flex items-center gap-1">
-                <HiSparkles className="w-3.5 h-3.5" />
-                <span>الخدمة المطلوبة *</span>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="edit-category" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
+                <FiTag className="w-3.5 h-3.5 text-slate-400" />
+                <span>فئة الحجز *</span>
               </label>
               <select
-                id="edit-service-type"
-                value={serviceType}
-                onChange={(e) => setServiceType(e.target.value)}
-                className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 cursor-pointer outline-none"
+                id="edit-category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value as BookingCategory)}
+                className="w-full px-3 h-10 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all cursor-pointer outline-none"
               >
-                {servicesList.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit-status" className="text-[11px] font-bold text-gray-400 pr-1 flex items-center gap-1">
-                <FiTag className="w-3.5 h-3.5" />
-                <span>حالة الحجز *</span>
-              </label>
-              <select
-                id="edit-status"
-                value={status}
-                onChange={(e) => setStatus(e.target.value as BookingStatus)}
-                className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 cursor-pointer outline-none"
-              >
-                {statusesList.map(s => <option key={s} value={s}>{s}</option>)}
+                {WARZONE_CATEGORIES.map(cat => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
 
-          {/* Row 5: Date & Time slot */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit-booking-date" className="text-[11px] font-bold text-gray-400 pr-1 flex items-center gap-1">
-                <FiCalendar className="w-3.5 h-3.5" />
-                <span>التاريخ الجديد *</span>
+          {/* Row 3: Date, Time & Status */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="edit-booking-date" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
+                <FiCalendar className="w-3.5 h-3.5 text-slate-400" />
+                <span>تاريخ الحجز *</span>
               </label>
               <input
                 id="edit-booking-date"
                 type="date"
                 required
-                min={todayStr}
                 value={date}
                 onChange={(e) => {
                   setDate(e.target.value);
                   setSelectedSlot('');
                 }}
-                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 outline-none"
+                className="w-full px-3.5 h-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all outline-none"
               />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit-time-slot" className="text-[11px] font-bold text-gray-400 pr-1 flex items-center gap-1">
-                <FiClock className="w-3.5 h-3.5" />
-                <span>الوقت المتاح *</span>
+
+            <div className="flex flex-col gap-1">
+              <label htmlFor="edit-booking-time" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
+                <FiClock className="w-3.5 h-3.5 text-slate-400" />
+                <span>وقت الحجز *</span>
               </label>
               {date ? (
                 <select
-                  id="edit-time-slot"
+                  id="edit-booking-time"
                   value={selectedSlot}
                   onChange={(e) => setSelectedSlot(e.target.value)}
-                  className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 cursor-pointer outline-none"
+                  className="w-full px-3 h-10 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all cursor-pointer outline-none"
                 >
-                  <option value="">-- اختر وقت الحجز المتاح --</option>
+                  <option value="">-- اختر الوقت --</option>
                   {slots.map((slot) => {
                     const booked = isSlotBooked(date, slot.key);
                     return (
@@ -354,67 +243,62 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                   })}
                 </select>
               ) : (
-                <div className="h-11 bg-neutral-50 border border-neutral-200/50 rounded-xl flex items-center px-4 text-xs text-gray-450 font-bold">
-                  يرجى تحديد التاريخ أولاً
+                <div className="h-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center px-4 text-xs text-slate-400 font-medium">
+                  حدد التاريخ أولاً
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Row 6: CRM Follow-up dates */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit-last-contact-date" className="text-[11px] font-bold text-gray-400 pr-1">تاريخ آخر تواصل</label>
-              <input
-                id="edit-last-contact-date"
-                type="date"
-                value={lastContactDate}
-                onChange={(e) => setLastContactDate(e.target.value)}
-                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 outline-none"
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit-next-followup-date" className="text-[11px] font-bold text-gray-400 pr-1 text-amber-800">تاريخ المتابعة القادمة</label>
-              <input
-                id="edit-next-followup-date"
-                type="date"
-                value={nextFollowupDate}
-                onChange={(e) => setNextFollowupDate(e.target.value)}
-                className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 outline-none"
-              />
+            <div className="flex flex-col gap-1">
+              <label htmlFor="edit-status" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
+                <FiTag className="w-3.5 h-3.5 text-slate-400" />
+                <span>حالة الحجز *</span>
+              </label>
+              <select
+                id="edit-status"
+                value={status}
+                onChange={(e) => setStatus(e.target.value as BookingDbStatus)}
+                className="w-full px-3 h-10 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all cursor-pointer outline-none"
+              >
+                {statusesList.map(s => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
-          {/* Row 7: Notes */}
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="edit-notes" className="text-[11px] font-bold text-gray-400 pr-1 flex items-center gap-1">
-              <FiFileText className="w-3.5 h-3.5" />
-              <span>ملاحظات المتابعة المحدثة</span>
+          {/* Row 4: Notes */}
+          <div className="flex flex-col gap-1">
+            <label htmlFor="edit-notes" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
+              <FiFileText className="w-3.5 h-3.5 text-slate-400" />
+              <span>ملاحظات الحجز</span>
             </label>
             <textarea
               id="edit-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              placeholder="مثال: طلب العميل تظليل لون أسود 20%..."
-              className="w-full p-3 bg-neutral-50 border border-neutral-200/85 rounded-xl text-sm font-semibold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-[background-color,border-color,box-shadow] duration-250 text-gray-800 outline-none resize-none"
+              placeholder="أي ملاحظات خاصة بالفعالية..."
+              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all outline-none resize-none"
             />
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-3 justify-end mt-4 pt-4 border-t border-neutral-100">
+          <div className="flex items-center gap-2.5 justify-end mt-3 pt-3.5 border-t border-slate-100">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 text-xs font-bold text-gray-500 hover:text-gray-800 hover:bg-neutral-50 border border-neutral-200 rounded-xl transition-[background-color,color] duration-200"
+              className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors cursor-pointer"
             >
               تراجع
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 text-xs font-bold bg-[#F4C542] hover:bg-[#E8B923] text-gray-900 rounded-xl hover:shadow-md hover:shadow-[#F4C542]/10 transition-[background-color,color,box-shadow] duration-200"
+              className="btn-primary-luxury px-5 py-2 text-xs font-bold"
             >
-              حفظ التعديلات المحدثة
+              حفظ التعديلات
             </button>
           </div>
         </form>
@@ -424,4 +308,3 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
 };
 
 export default React.memo(EditBookingModal);
-

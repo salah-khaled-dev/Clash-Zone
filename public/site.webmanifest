@@ -1,7 +1,7 @@
 {
-  "name": "انفينيتي برايت - لوحة الحجوزات والمبيعات الفاخرة",
-  "short_name": "انفينيتي برايت",
-  "description": "شاشة التحكم وإدارة علاقات العملاء لمركز إنفينيتي برايت لخدمات العناية وحماية طلاء السيارات الفاخرة",
+  "name": "War Zone - نظام إدارة الحجوزات والفعاليات",
+  "short_name": "War Zone",
+  "description": "لوحة التحكم وإدارة حجوزات ميادين وفعاليات وأنشطة War Zone",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
@@ -14,8 +14,8 @@
       "type": "image/png"
     }
   ],
-  "theme_color": "#111827",
-  "background_color": "#FAFAF8",
+  "theme_color": "#EF4444",
+  "background_color": "#0A0D14",
   "display": "standalone",
   "start_url": "/"
 }

@@ -1,48 +1,74 @@
 import React from 'react';
-import { FiClock, FiMessageSquare, FiCalendar, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
-import { formatStatus } from '../utils/bookingFormatters';
+import { FiClock, FiCalendar, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import { translateStatus } from '../utils/translations';
+import type { BookingDbStatus } from '../types/booking';
 
 interface StatusBadgeProps {
-  status: 'جديد' | 'تم التواصل' | 'تم التأكيد' | 'مكتمل' | 'ملغي';
+  status: BookingDbStatus | string;
 }
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
-  const arabicStatus = formatStatus(status);
+  const arabicStatus = translateStatus(status);
 
-  // Status configurations
-  const config = {
-    'جديد': {
-      bg: 'bg-blue-50 text-blue-700 border-blue-150',
+  const config: Record<string, { bg: string; dot: string; icon: React.ReactNode }> = {
+    pending: {
+      bg: 'bg-blue-50 text-blue-700 border-blue-200',
       dot: 'bg-blue-500',
       icon: <FiClock className="w-3.5 h-3.5 text-blue-600" />,
     },
-    'تم التواصل': {
-      bg: 'bg-purple-50 text-purple-700 border-purple-150',
-      dot: 'bg-purple-500',
-      icon: <FiMessageSquare className="w-3.5 h-3.5 text-purple-600" />,
+    'جديد': {
+      bg: 'bg-blue-50 text-blue-700 border-blue-200',
+      dot: 'bg-blue-500',
+      icon: <FiClock className="w-3.5 h-3.5 text-blue-600" />,
     },
-    'تم التأكيد': {
-      bg: 'bg-amber-50 text-amber-700 border-amber-200/50',
+    confirmed: {
+      bg: 'bg-amber-50 text-amber-800 border-amber-200',
       dot: 'bg-amber-500',
       icon: <FiCalendar className="w-3.5 h-3.5 text-amber-600" />,
     },
-    'مكتمل': {
-      bg: 'bg-emerald-50 text-emerald-700 border-emerald-200/50',
+    'تم التأكيد': {
+      bg: 'bg-amber-50 text-amber-800 border-amber-200',
+      dot: 'bg-amber-500',
+      icon: <FiCalendar className="w-3.5 h-3.5 text-amber-600" />,
+    },
+    completed: {
+      bg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       dot: 'bg-emerald-500',
       icon: <FiCheckCircle className="w-3.5 h-3.5 text-emerald-600" />,
     },
+    'مكتمل': {
+      bg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      dot: 'bg-emerald-500',
+      icon: <FiCheckCircle className="w-3.5 h-3.5 text-emerald-600" />,
+    },
+    cancelled: {
+      bg: 'bg-rose-50 text-rose-700 border-rose-200',
+      dot: 'bg-rose-500',
+      icon: <FiAlertCircle className="w-3.5 h-3.5 text-rose-600" />,
+    },
     'ملغي': {
-      bg: 'bg-rose-50 text-rose-700 border-rose-200/50',
+      bg: 'bg-rose-50 text-rose-700 border-rose-200',
+      dot: 'bg-rose-500',
+      icon: <FiAlertCircle className="w-3.5 h-3.5 text-rose-600" />,
+    },
+    // Fallback for legacy records
+    group_cancelled: {
+      bg: 'bg-rose-50 text-rose-700 border-rose-200',
+      dot: 'bg-rose-500',
+      icon: <FiAlertCircle className="w-3.5 h-3.5 text-rose-600" />,
+    },
+    'إلغاء جماعي': {
+      bg: 'bg-rose-50 text-rose-700 border-rose-200',
       dot: 'bg-rose-500',
       icon: <FiAlertCircle className="w-3.5 h-3.5 text-rose-600" />,
     },
   };
 
-  const currentConfig = config[status] || config['جديد'];
+  const currentConfig = config[status] || config['pending'];
 
   return (
     <div
-      className={`inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border ${currentConfig.bg} transition-[background-color,border-color,color] duration-300 shadow-sm animate-scale-in`}
+      className={`inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${currentConfig.bg} shadow-none`}
     >
       <span className={`status-pulse-dot ${currentConfig.dot}`} />
       <span className="flex-shrink-0">{currentConfig.icon}</span>
@@ -52,4 +78,3 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
 };
 
 export default React.memo(StatusBadge);
-

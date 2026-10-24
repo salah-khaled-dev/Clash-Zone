@@ -1,7 +1,6 @@
 import React from 'react';
 import { 
   FiUser, 
-  FiMapPin, 
   FiClock, 
   FiCalendar, 
   FiPhone, 
@@ -9,9 +8,10 @@ import {
   FiMessageCircle,
   FiEdit3,
   FiEye,
-  FiTrash2
+  FiTrash2,
+  FiUsers,
+  FiFileText
 } from 'react-icons/fi';
-import { LuCar } from 'react-icons/lu';
 import type { Booking } from '../types/booking';
 import { StatusBadge } from './StatusBadge';
 import { ActionMenu } from './ActionMenu';
@@ -19,19 +19,20 @@ import { useToast } from './useToast';
 import {
   formatArabicDate,
   formatArabicTime,
-  formatVehicleName,
-  formatServiceName,
-  formatCustomerType
+  formatPeopleCount,
+  formatCreationDateTime
 } from '../utils/bookingFormatters';
-import { translateBranch } from '../utils/translations';
+import { getCategoryIcon } from '../utils/translations';
 
 interface BookingCardRowProps {
   booking: Booking;
   onViewDetails: (booking: Booking) => void;
   onEditTime: (booking: Booking) => void;
   onConfirm: (booking: Booking) => void;
+  onComplete?: (booking: Booking) => void;
   onCancel: (booking: Booking) => void;
-  onDelete?: (bookingId: string) => void; // Added for CRM direct deletes
+  onDelete?: (bookingId: string) => void;
+  canDelete?: boolean;
 }
 
 export const BookingCardRow = React.memo<BookingCardRowProps>(({
@@ -39,237 +40,248 @@ export const BookingCardRow = React.memo<BookingCardRowProps>(({
   onViewDetails,
   onEditTime,
   onConfirm,
+  onComplete,
   onCancel,
-  onDelete
+  onDelete,
+  canDelete = false,
 }) => {
   const { showToast } = useToast();
 
-  const vehicleStr = `${booking.vehicle_make} ${booking.vehicle_model}${booking.vehicle_year ? ` ${booking.vehicle_year}` : ''}`;
-  const displayCar = formatVehicleName(vehicleStr);
-  const displayService = formatServiceName(booking.service_type);
-  const displayBranch = translateBranch(booking.branch_name);
   const displayDate = formatArabicDate(booking.booking_date);
-  const displayTime = formatArabicTime(booking.time_slot);
-  const displayClientType = formatCustomerType(booking.customer_type);
+  const displayTime = formatArabicTime(booking.booking_time);
+  const peopleText = formatPeopleCount(booking.number_of_people);
+  const categoryIcon = getCategoryIcon(booking.category);
 
-  // Marketing source icon mapping
-  const getSourceIcon = (source: string) => {
-    switch (source) {
-      case 'انستغرام': return '📱';
-      case 'تيك توك': return '🎵';
-      case 'سناب شات': return '👻';
-      case 'واتساب': return '💬';
-      case 'اتصال هاتفي': return '📞';
-      case 'زيارة مباشرة': return '🚶';
-      case 'صديق / توصية': return '🤝';
-      case 'جوجل': return '🔍';
-      case 'إعلان ممول': return '📣';
-      case 'وكالة': return '🏢';
-      default: return '🌐';
-    }
-  };
-
-  // Client Type badges styling
-  const getTypeBadgeClass = (type: string) => {
-    switch (type) {
-      case 'new': return 'bg-blue-50 text-blue-700 border-blue-100';
-      case 'returning': return 'bg-purple-50 text-purple-700 border-purple-100';
-      case 'vip': return 'bg-amber-50 text-amber-700 border-amber-200/50 shadow-sm ring-1 ring-amber-400/10';
-      case 'referred': return 'bg-cyan-50 text-cyan-700 border-cyan-100';
-      default: return 'bg-neutral-50 text-neutral-500 border-neutral-100';
-    }
-  };
-
-  // Marketing source badge styling
-  const getSourceBadgeClass = (source: string) => {
-    switch (source) {
-      case 'وكالة':
-        return 'bg-indigo-50 text-indigo-700 border-indigo-100';
+  // Clean, professional light category badge styling
+  const getCategoryBadgeClass = (category: string) => {
+    switch (category) {
+      case 'عيد ميلاد':
+        return 'bg-pink-50 text-pink-700 border-pink-200';
+      case 'جامعة':
+        return 'bg-purple-50 text-purple-700 border-purple-200';
+      case 'مدرسة':
+        return 'bg-amber-50 text-amber-800 border-amber-200';
+      case 'إيفنت خارجي':
+        return 'bg-teal-50 text-teal-700 border-teal-200';
+      case 'كول سنتر':
+        return 'bg-cyan-50 text-cyan-700 border-cyan-200';
+      case 'عميل سابق':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
       default:
-        return 'bg-neutral-50 text-gray-700 border-neutral-150';
+        return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
 
-  // Generate prefilled WhatsApp URL
   const getWhatsAppLink = () => {
-    // Standard WhatsApp template in Arabic
-    const rawMessage = `السلام عليكم،\n\nمعك Infinity Bright.\n\nنود تأكيد موعدكم بتاريخ ${displayDate}\nالساعة ${displayTime}.\n\nشكراً لكم.`;
+    const rawMessage = `السلام عليكم،\n\nمعك War Zone.\n\nنود تأكيد حجزكم لعدد ${booking.number_of_people} أفراد بتاريخ ${displayDate}\nالساعة ${displayTime}.\n\nأهلاً بكم في War Zone!`;
     const encodedMessage = encodeURIComponent(rawMessage);
     
-    // Clean phone number from non-numeric (e.g. spaces, leading zero) and apply Saudi country code 966
-    let cleanPhone = booking.customer_phone.replace(/\D/g, '');
-    if (cleanPhone.startsWith('05')) {
-      cleanPhone = '966' + cleanPhone.substring(1);
-    } else if (cleanPhone.startsWith('5')) {
-      cleanPhone = '966' + cleanPhone;
+    let cleanPhone = (booking.phone || '').replace(/\D/g, '');
+    if (cleanPhone.startsWith('011')) {
+      cleanPhone = '20' + cleanPhone.substring(1);
+    } else if (cleanPhone.startsWith('01')) {
+      cleanPhone = '20' + cleanPhone;
     }
     
     return `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
   };
 
-  // Copy Phone Number Action
   const handleCopyPhone = () => {
-    navigator.clipboard.writeText(booking.customer_phone);
+    navigator.clipboard.writeText(booking.phone);
     showToast('تم نسخ رقم الجوال بنجاح', 'success');
   };
 
   return (
     <div
-      className="w-full box-border bg-white border border-neutral-100 hover:border-[#F4C542]/50 rounded-[22px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col lg:grid lg:grid-cols-[260px_160px_160px_140px_130px_150px_auto] lg:items-center gap-4 relative overflow-hidden card-hover-effect animate-fade-in-up"
+      className="w-full box-border bg-white border border-slate-200/90 hover:border-slate-300 rounded-xl p-4 shadow-sm flex flex-col lg:grid lg:grid-cols-[280px_130px_140px_145px_130px_auto] lg:items-center gap-3.5 relative card-hover-effect animate-fade-in-up"
     >
-      {/* VIP Left border accent indicator */}
-      {booking.customer_type === 'vip' && (
-        <div className="absolute top-0 bottom-0 right-0 w-1.5 bg-[#F4C542]" />
-      )}
-
-      {/* Column 1: Client & Car details */}
-      <div className="flex items-center gap-3 w-full min-w-0" dir="rtl">
-        <div className="w-11 h-11 rounded-2xl bg-neutral-50 border border-neutral-100 flex items-center justify-center text-gray-500 flex-shrink-0">
-          <FiUser className="w-5 h-5" />
+      {/* Column 1: Customer Information & Creator Metadata */}
+      <div className="flex items-start gap-2.5 w-full min-w-0" dir="rtl">
+        {/* Subtle, compact customer avatar */}
+        <div className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-400 flex-shrink-0 mt-0.5">
+          <FiUser className="w-3.5 h-3.5" />
         </div>
-        <div className="flex flex-col min-w-0">
-          <span className="text-base font-extrabold text-gray-900 tracking-tight leading-normal truncate flex items-center gap-1.5">
+
+        {/* Info Column */}
+        <div className="flex flex-col min-w-0 flex-grow">
+          {/* Customer Name */}
+          <span 
+            className="text-sm font-semibold text-slate-900 tracking-tight leading-snug truncate"
+            title={booking.customer_name}
+          >
             {booking.customer_name}
-            {booking.customer_type === 'vip' && <span className="text-xs" title="عميل VIP">👑</span>}
           </span>
-          <span className="text-[13px] font-semibold text-gray-400 flex items-center gap-1 mt-2 truncate">
-            <LuCar className="w-3.5 h-3.5 text-[#D4A017] flex-shrink-0" />
-            <span className="truncate">{displayCar}</span>
-          </span>
+
+          {/* Phone Number with Icon & Compact Copy Button */}
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <FiPhone className="w-3 h-3 text-slate-400 flex-shrink-0" />
+            <span 
+              className="text-xs font-medium text-slate-600 whitespace-nowrap select-all tracking-wide" 
+              dir="ltr"
+            >
+              {booking.phone}
+            </span>
+            <button
+              type="button"
+              onClick={handleCopyPhone}
+              className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors cursor-pointer outline-none flex items-center justify-center"
+              title="نسخ رقم الجوال"
+              aria-label="نسخ رقم الجوال"
+            >
+              <FiCopy className="w-3 h-3" />
+            </button>
+          </div>
+
+          {/* Subtle Divider */}
+          <div className="border-t border-slate-100 my-1.5" />
+
+          {/* Creator Metadata Row */}
+          <div className="flex items-center gap-1.5 text-[10.5px] text-slate-400 leading-tight">
+            <span className="truncate">
+              بواسطة: <span className="font-medium text-slate-600">{booking.creator_name || 'غير مسجل'}</span>
+            </span>
+            {booking.created_at && (
+              <>
+                <span className="text-slate-300">•</span>
+                <span className="text-slate-400 whitespace-nowrap text-[10px]">
+                  {formatCreationDateTime(booking.created_at)}
+                </span>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Column 2: Badges (Source & Client Type) */}
-      <div className="flex flex-row lg:flex-col gap-2 min-w-0 items-center lg:items-start">
-        {/* Source badge */}
-        <span className={`text-xs font-bold border px-2.5 py-1 rounded-xl whitespace-nowrap ${getSourceBadgeClass(booking.customer_source)}`}>
-          {getSourceIcon(booking.customer_source)} {booking.customer_source}
-        </span>
-        {/* Client Type badge */}
-        <span className={`text-[11px] font-black border px-2 py-0.5 rounded-lg whitespace-nowrap ${getTypeBadgeClass(booking.customer_type)}`}>
-          {displayClientType}
-        </span>
-      </div>
-
-      {/* Column 3: Service */}
+      {/* Column 2: Number of People */}
       <div className="flex items-center min-w-0">
-        <span className="text-[13px] font-black text-gray-900 bg-neutral-50 border border-neutral-150 px-3 py-1.5 rounded-xl truncate whitespace-nowrap">
-          {displayService}
+        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-lg text-slate-700">
+          <FiUsers className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+          <span className="text-xs font-bold">{peopleText}</span>
+        </div>
+      </div>
+
+      {/* Column 3: Category Badge */}
+      <div className="flex items-center min-w-0">
+        <span className={`text-xs font-bold border px-2.5 py-1 rounded-lg whitespace-nowrap flex items-center gap-1.5 ${getCategoryBadgeClass(booking.category)}`}>
+          <span>{categoryIcon}</span>
+          <span>{booking.category}</span>
         </span>
       </div>
 
-      {/* Column 4: Date & Time details */}
-      <div className="flex flex-row lg:flex-col items-center lg:items-start gap-4 lg:gap-1.5 min-w-0">
-        <span className="text-[13px] font-extrabold text-gray-600 flex items-center gap-1.5">
-          <FiCalendar className="w-3.5 h-3.5 text-[#D4A017] flex-shrink-0" />
+      {/* Column 4: Date & Time */}
+      <div className="flex flex-row lg:flex-col items-center lg:items-start gap-3 lg:gap-1 min-w-0">
+        <span className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+          <FiCalendar className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
           <span className="leading-none">{displayDate}</span>
         </span>
-        <span className="text-[13px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200/25 px-2 py-0.5 rounded-lg flex items-center gap-1">
-          <FiClock className="w-3.5 h-3.5 text-[#D4A017] flex-shrink-0" />
+        <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md flex items-center gap-1">
+          <FiClock className="w-3 h-3 text-slate-400 flex-shrink-0" />
           <span className="leading-none">{displayTime}</span>
         </span>
       </div>
 
-      {/* Column 5: Static Branch Details */}
-      <div className="flex items-center min-w-0">
-        <span className="text-[13px] font-semibold text-gray-400 flex items-center gap-1 truncate">
-          <FiMapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-          <span className="truncate">{displayBranch}</span>
-        </span>
-      </div>
-
-      {/* Column 6: Status Badge */}
+      {/* Column 5: Status Badge */}
       <div className="flex items-center lg:justify-center">
         <StatusBadge status={booking.status} />
       </div>
 
-      {/* Column 7: CRM Quick Actions & Dropdown menu */}
-      <div className="flex items-center justify-between lg:justify-end gap-2 pt-3.5 lg:pt-0 border-t border-neutral-50 lg:border-none w-full">
-        {/* Quick messaging/call actions */}
-        <div className="flex items-center gap-1.5">
-          {/* Direct call */}
+      {/* Column 6: Actions */}
+      <div className="flex items-center justify-between lg:justify-end gap-1.5 pt-3 lg:pt-0 border-t border-slate-100 lg:border-none w-full">
+        {/* Quick Contact Buttons */}
+        <div className="flex items-center gap-1">
+          {/* Direct Phone Call */}
           <a
-            href={`tel:${booking.customer_phone}`}
-            className="p-2 bg-blue-50 border border-blue-100 hover:bg-blue-100 text-blue-600 rounded-xl transition-all shadow-sm flex items-center justify-center"
+            href={`tel:${booking.phone}`}
+            className="p-1.5 bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors flex items-center justify-center"
             title="اتصال هاتفي"
           >
-            <FiPhone className="w-4 h-4" />
+            <FiPhone className="w-3.5 h-3.5" />
           </a>
 
-          {/* Direct WhatsApp with prefilled message */}
+          {/* WhatsApp Message */}
           <a
             href={getWhatsAppLink()}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-2 bg-emerald-50 border border-emerald-100 hover:bg-emerald-100 text-emerald-600 rounded-xl transition-all shadow-sm flex items-center justify-center"
+            className="p-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors flex items-center justify-center"
             title="مراسلة واتساب"
           >
-            <FiMessageCircle className="w-4 h-4" />
+            <FiMessageCircle className="w-3.5 h-3.5" />
           </a>
 
-          {/* Copy phone number */}
+          {/* Copy Phone */}
           <button
             onClick={handleCopyPhone}
-            className="p-2 bg-neutral-50 border border-neutral-200 hover:bg-neutral-100 text-gray-500 rounded-xl transition-all shadow-sm flex items-center justify-center outline-none cursor-pointer"
+            className="p-1.5 bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center justify-center cursor-pointer outline-none"
             title="نسخ رقم الجوال"
           >
-            <FiCopy className="w-4 h-4" />
+            <FiCopy className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Extended drop menu for Edit/Delete/View details */}
-        <div className="flex items-center gap-1">
+        {/* Action icons */}
+        <div className="flex items-center gap-0.5">
           {/* Quick Edit */}
           <button
             onClick={() => onEditTime(booking)}
-            className="p-2 hover:bg-neutral-50 text-gray-500 hover:text-gray-800 rounded-xl transition-colors outline-none cursor-pointer hidden lg:flex"
+            className="p-1.5 hover:bg-slate-100 text-slate-500 hover:text-slate-800 rounded-lg transition-colors cursor-pointer outline-none hidden lg:flex"
             title="تعديل الحجز"
           >
             <FiEdit3 className="w-4 h-4" />
           </button>
 
-          {/* Quick View */}
+          {/* Quick View Details */}
           <button
             onClick={() => onViewDetails(booking)}
-            className="p-2 hover:bg-neutral-50 text-gray-500 hover:text-gray-800 rounded-xl transition-colors outline-none cursor-pointer hidden lg:flex"
+            className="p-1.5 hover:bg-slate-100 text-slate-500 hover:text-slate-800 rounded-lg transition-colors cursor-pointer outline-none hidden lg:flex"
             title="عرض التفاصيل"
           >
             <FiEye className="w-4 h-4" />
           </button>
 
-          {/* Quick Delete */}
-          {onDelete && (
+          {/* Quick Delete (Admin/Manager Only) */}
+          {canDelete && onDelete && (
             <button
               onClick={() => {
-                if (window.confirm('هل أنت متأكد من رغبتك في حذف حجز هذا العميل نهائياً من قاعدة البيانات؟')) {
+                if (window.confirm(`هل أنت متأكد من حذف حجز (${booking.customer_name}) نهائياً؟`)) {
                   onDelete(booking.id);
                 }
               }}
-              className="p-2 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded-xl transition-colors outline-none cursor-pointer hidden lg:flex"
-              title="حذف الحجز"
+              className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition-colors cursor-pointer outline-none hidden lg:flex"
+              title="حذف الحجز نهائياً (خاص بالمسؤول)"
             >
               <FiTrash2 className="w-4 h-4" />
             </button>
           )}
 
-          {/* Dropdown Menu for smaller widths / custom state changes */}
-          <div className="z-20">
+          {/* Dropdown Menu */}
+          <div>
             <ActionMenu
               onViewDetails={() => onViewDetails(booking)}
               onEditTime={() => onEditTime(booking)}
               onConfirm={() => onConfirm(booking)}
+              onComplete={onComplete ? () => onComplete(booking) : undefined}
               onCancel={() => onCancel(booking)}
+              onWhatsApp={() => window.open(getWhatsAppLink(), '_blank', 'noopener,noreferrer')}
+              onCopyPhone={handleCopyPhone}
+              onDelete={canDelete && onDelete ? () => {
+                if (window.confirm(`هل أنت متأكد من حذف حجز (${booking.customer_name}) نهائياً؟`)) {
+                  onDelete(booking.id);
+                }
+              } : undefined}
+              canDelete={canDelete}
               status={booking.status}
             />
           </div>
         </div>
       </div>
 
-      {/* Brief Notes Preview at the bottom of the card if notes exist */}
+      {/* Notes footer */}
       {booking.notes && (
-        <div className="col-span-full border-t border-dashed border-neutral-100 pt-2.5 mt-1 text-xs font-bold text-gray-400 flex items-start gap-1.5">
-          <span className="text-[#D4A017] flex-shrink-0">📝 ملاحظات المتابعة:</span>
-          <span className="text-gray-500 font-semibold line-clamp-1 flex-grow">{booking.notes}</span>
+        <div className="col-span-full border-t border-slate-100 pt-2 mt-0.5 text-xs text-slate-500 flex items-start gap-1.5">
+          <FiFileText className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 mt-0.5" />
+          <span className="font-bold text-slate-600 flex-shrink-0">ملاحظات:</span>
+          <span className="font-normal line-clamp-1 flex-grow">{booking.notes}</span>
         </div>
       )}
     </div>

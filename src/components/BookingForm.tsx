@@ -4,33 +4,30 @@ import {
   FiPhone, 
   FiClock, 
   FiCalendar, 
-  FiShare2, 
   FiTag, 
   FiPlusCircle,
-  FiFileText
+  FiFileText,
+  FiUsers,
+  FiMinus,
+  FiPlus,
+  FiMapPin
 } from 'react-icons/fi';
-import { LuCar } from 'react-icons/lu';
-import { HiSparkles } from 'react-icons/hi2';
 import { generateSlots } from '../utils/timeSlots';
 import type { TimeSlot } from '../utils/timeSlots';
 import { useToast } from './useToast';
-import type { Booking, BookingStatus, CustomerSource, CustomerType } from '../types/booking';
+import type { Booking, BookingCategory, BookingDbStatus } from '../types/booking';
+import { WARZONE_CATEGORIES, STATUS_ARABIC_MAP } from '../types/booking';
 
 interface BookingFormProps {
   bookings: Booking[];
   onSubmitBooking: (bookingData: {
     customer_name: string;
-    customer_phone: string;
-    customer_source: CustomerSource;
-    customer_type: CustomerType;
-    vehicle_make: string;
-    vehicle_model: string;
-    vehicle_year: string;
-    service_type: string;
-    branch_name: string;
+    phone: string;
+    number_of_people: number;
+    category: BookingCategory;
     booking_date: string;
-    time_slot: string;
-    status: BookingStatus;
+    booking_time: string;
+    status: BookingDbStatus;
     notes: string;
   }) => void;
 }
@@ -40,30 +37,30 @@ export const BookingForm = React.memo<BookingFormProps>(({ bookings, onSubmitBoo
 
   // Form Fields State
   const [customerName, setCustomerName] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [customerSource, setCustomerSource] = useState<CustomerSource>('انستغرام');
-  const [customerType, setCustomerType] = useState<CustomerType>('new');
-  
-  const [vehicleMake, setVehicleMake] = useState('');
-  const [vehicleModel, setVehicleModel] = useState('');
-  const [vehicleYear, setVehicleYear] = useState('');
-  
-  const [serviceType, setServiceType] = useState('حماية الطلاء PPF');
+  const [phone, setPhone] = useState('');
+  const [numberOfPeople, setNumberOfPeople] = useState<number>(2);
+  const [category, setCategory] = useState<BookingCategory>('عميل جديد');
   const [bookingDate, setBookingDate] = useState('');
   const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
-  const [status, setStatus] = useState<BookingStatus>('جديد');
+  const [status, setStatus] = useState<BookingDbStatus>('pending');
   const [notes, setNotes] = useState('');
 
   // Slots state
   const [slots] = useState<TimeSlot[]>(() => generateSlots());
 
-  const todayStr = new Date().toISOString().split('T')[0];
-
   // Check slot availability
   const isSlotBooked = (date: string, time: string) => {
     return bookings.some(
-      (b) => b.booking_date === date && b.time_slot === time && b.status !== 'ملغي'
+      (b) => b.booking_date === date && b.booking_time === time && b.status !== 'cancelled'
     );
+  };
+
+  const handleIncrementPeople = () => {
+    setNumberOfPeople((prev) => prev + 1);
+  };
+
+  const handleDecrementPeople = () => {
+    setNumberOfPeople((prev) => Math.max(1, prev - 1));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -74,14 +71,15 @@ export const BookingForm = React.memo<BookingFormProps>(({ bookings, onSubmitBoo
       return;
     }
     
-    const phoneRegex = /^05\d{8}$/;
-    if (!phoneRegex.test(customerPhone.trim())) {
-      showToast("رقم الجوال غير صحيح! يجب أن يبدأ بـ 05 ويتكون من ١٠ أرقام.", "warning");
+    const phoneRegex = /^(05\d{8}|01\d{9}|011\d{8}|\+?\d{9,15})$/;
+    if (!phoneRegex.test(phone.trim().replace(/[\s-]/g, ''))) {
+      showToast("رقم الجوال غير صحيح! يرجى إدخال رقم جوال صالح.", "warning");
       return;
     }
 
-    if (!vehicleMake.trim() || !vehicleModel.trim()) {
-      showToast("يرجى كتابة الشركة المصنعة وموديل السيارة.", "warning");
+    const count = Math.floor(Number(numberOfPeople));
+    if (isNaN(count) || count < 1) {
+      showToast("عدد الأفراد يجب أن يكون رقماً صحيحاً وموجباً (١ على الأقل).", "warning");
       return;
     }
 
@@ -98,92 +96,52 @@ export const BookingForm = React.memo<BookingFormProps>(({ bookings, onSubmitBoo
 
     onSubmitBooking({
       customer_name: customerName.trim(),
-      customer_phone: customerPhone.trim(),
-      customer_source: customerSource,
-      customer_type: customerType,
-      vehicle_make: vehicleMake.trim(),
-      vehicle_model: vehicleModel.trim(),
-      vehicle_year: vehicleYear.trim(),
-      service_type: serviceType,
-      branch_name: 'فرع الرياض - حي المروج', // Automatically assigned Riyadh Branch
+      phone: phone.trim(),
+      number_of_people: count,
+      category: category,
       booking_date: bookingDate,
-      time_slot: selectedTimeSlot,
+      booking_time: selectedTimeSlot,
       status: status,
       notes: notes.trim()
     });
 
     // Reset Form Fields after submit
     setCustomerName('');
-    setCustomerPhone('');
-    setVehicleMake('');
-    setVehicleModel('');
-    setVehicleYear('');
+    setPhone('');
+    setNumberOfPeople(2);
+    setCategory('عميل جديد');
     setBookingDate('');
     setSelectedTimeSlot('');
     setNotes('');
-    setCustomerSource('انستغرام');
-    setCustomerType('new');
-    setStatus('جديد');
+    setStatus('pending');
   };
 
-  // Lists configurations
-  const servicesList = [
-    "حماية الطلاء PPF",
-    "نانو سيراميك",
-    "عزل حراري",
-    "غسيل وتلميع",
-    "خدمة أخرى"
-  ];
-
-  const sourcesList = [
-    "انستغرام",
-    "تيك توك",
-    "سناب شات",
-    "واتساب",
-    "اتصال هاتفي",
-    "زيارة مباشرة",
-    "صديق / توصية",
-    "جوجل",
-    "إعلان ممول",
-    "وكالة",
-    "أخرى"
-  ];
-
-  const typesList = [
-    { key: "new", label: "عميل جديد" },
-    { key: "returning", label: "عميل سابق" },
-    { key: "vip", label: "عميل VIP" },
-    { key: "referred", label: "عميل محول من عميل آخر" }
-  ] as const;
-
-  const statusesList: BookingStatus[] = [
-    "جديد",
-    "تم التواصل",
-    "تم التأكيد",
-    "مكتمل",
-    "ملغي"
+  const statusesList: { value: BookingDbStatus; label: string }[] = [
+    { value: 'pending', label: STATUS_ARABIC_MAP.pending },
+    { value: 'confirmed', label: STATUS_ARABIC_MAP.confirmed },
   ];
 
   return (
-    <div className="premium-card p-6 lg:p-8 flex flex-col gap-6 relative overflow-hidden">
-      {/* Dynamic Gold Gradient outline decoration */}
-      <div className="absolute top-0 right-0 left-0 h-[3px] bg-gradient-to-r from-[#F4C542] via-[#FFD95A] to-[#D4A017]" />
-
-      <div className="flex justify-between items-center border-b border-neutral-100 pb-4">
-        <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
-          <FiPlusCircle className="w-5 h-5 text-[#D4A017]" />
-          <span>إضافة حجز جديد للعملاء</span>
+    <div className="bg-white p-6 lg:p-7 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col gap-6">
+      
+      {/* Header */}
+      <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+        <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+          <FiPlusCircle className="w-5 h-5 text-red-600" />
+          <span>تسجيل حجز جديد</span>
         </h3>
-        <span className="text-[10px] font-black text-[#D4A017] bg-[#F4C542]/10 px-3 py-1 rounded-xl">
-          📍 فرع الرياض - حي المروج
+        <span className="text-[11px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-3 py-1 rounded-lg flex items-center gap-1.5">
+          <FiMapPin className="w-3.5 h-3.5 text-slate-400" />
+          <span>ميدان War Zone الرئيسي</span>
         </span>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-12 gap-5">
-        {/* Row 1: Client details */}
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-12 gap-4">
+        
+        {/* Row 1: Client Name, Phone, People Count, Category */}
         <div className="md:col-span-4 flex flex-col gap-1.5">
-          <label htmlFor="form-customer-name" className="text-[11px] font-bold text-gray-400 pr-1 flex items-center gap-1">
-            <FiUser className="w-3.5 h-3.5" />
+          <label htmlFor="form-customer-name" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
+            <FiUser className="w-3.5 h-3.5 text-slate-400" />
             <span>اسم العميل الكامل *</span>
           </label>
           <input
@@ -192,162 +150,113 @@ export const BookingForm = React.memo<BookingFormProps>(({ bookings, onSubmitBoo
             required
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
-            placeholder="الاسم الكامل للعميل"
-            className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/80 rounded-xl text-sm font-semibold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all text-gray-800 outline-none"
+            placeholder=" مثال : حسام مهدي "
+            className="w-full px-3.5 h-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 placeholder-slate-400 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all outline-none"
           />
         </div>
 
         <div className="md:col-span-3 flex flex-col gap-1.5">
-          <label htmlFor="form-customer-phone" className="text-[11px] font-bold text-gray-400 pr-1 flex items-center gap-1">
-            <FiPhone className="w-3.5 h-3.5" />
+          <label htmlFor="form-phone" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
+            <FiPhone className="w-3.5 h-3.5 text-slate-400" />
             <span>رقم جوال العميل *</span>
           </label>
           <input
-            id="form-customer-phone"
+            id="form-phone"
             type="tel"
             required
-            value={customerPhone}
-            onChange={(e) => setCustomerPhone(e.target.value)}
-            placeholder="05xxxxxxxx"
-            className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/80 rounded-xl text-sm font-bold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all text-gray-800 outline-none"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="01xxxxxxxxx"
+            className="w-full px-3.5 h-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 placeholder-slate-400 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all outline-none"
             dir="ltr"
             style={{ textAlign: 'right' }}
           />
         </div>
 
         <div className="md:col-span-2 flex flex-col gap-1.5">
-          <label htmlFor="form-customer-source" className="text-[11px] font-bold text-gray-400 pr-1 flex items-center gap-1">
-            <FiShare2 className="w-3.5 h-3.5" />
-            <span>مصدر العميل *</span>
+          <label htmlFor="form-number-of-people" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
+            <FiUsers className="w-3.5 h-3.5 text-slate-400" />
+            <span>عدد الأفراد *</span>
           </label>
-          <select
-            id="form-customer-source"
-            value={customerSource}
-            onChange={(e) => setCustomerSource(e.target.value as CustomerSource)}
-            className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/80 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all cursor-pointer outline-none"
-          >
-            {sourcesList.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
+          <div className="flex items-center h-10 bg-slate-50 border border-slate-200 rounded-xl px-1">
+            <button
+              type="button"
+              onClick={handleDecrementPeople}
+              className="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <FiMinus className="w-3 h-3" />
+            </button>
+            <input
+              id="form-number-of-people"
+              type="number"
+              min="1"
+              required
+              value={numberOfPeople}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                setNumberOfPeople(isNaN(val) ? 1 : Math.max(1, val));
+              }}
+              className="w-full text-center bg-transparent text-sm font-black text-slate-900 outline-none"
+            />
+            <button
+              type="button"
+              onClick={handleIncrementPeople}
+              className="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <FiPlus className="w-3 h-3" />
+            </button>
+          </div>
         </div>
 
         <div className="md:col-span-3 flex flex-col gap-1.5">
-          <label htmlFor="form-customer-type" className="text-[11px] font-bold text-gray-400 pr-1 flex items-center gap-1">
-            <FiTag className="w-3.5 h-3.5" />
-            <span>نوع العميل *</span>
+          <label htmlFor="form-category" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
+            <FiTag className="w-3.5 h-3.5 text-slate-400" />
+            <span>فئة الحجز *</span>
           </label>
           <select
-            id="form-customer-type"
-            value={customerType}
-            onChange={(e) => setCustomerType(e.target.value as CustomerType)}
-            className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/80 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all cursor-pointer outline-none"
+            id="form-category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value as BookingCategory)}
+            className="w-full px-3 h-10 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all cursor-pointer outline-none"
           >
-            {typesList.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+            {WARZONE_CATEGORIES.map(cat => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
           </select>
         </div>
 
-        {/* Row 2: Car details & Status */}
+        {/* Row 2: Date, Time Slot, Status */}
         <div className="md:col-span-4 flex flex-col gap-1.5">
-          <label htmlFor="form-vehicle-make" className="text-[11px] font-bold text-gray-400 pr-1 flex items-center gap-1">
-            <LuCar className="w-3.5 h-3.5" />
-            <span>نوع السيارة / الشركة المصنعة *</span>
-          </label>
-          <input
-            id="form-vehicle-make"
-            type="text"
-            required
-            value={vehicleMake}
-            onChange={(e) => setVehicleMake(e.target.value)}
-            placeholder="مثال: Porsche"
-            className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/80 rounded-xl text-sm font-semibold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all text-gray-800 outline-none"
-          />
-        </div>
-
-        <div className="md:col-span-3 flex flex-col gap-1.5">
-          <label htmlFor="form-vehicle-model" className="text-[11px] font-bold text-gray-400 pr-1">موديل السيارة</label>
-          <input
-            id="form-vehicle-model"
-            type="text"
-            required
-            value={vehicleModel}
-            onChange={(e) => setVehicleModel(e.target.value)}
-            placeholder="مثال: Taycan"
-            className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/80 rounded-xl text-sm font-semibold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all text-gray-800 outline-none"
-          />
-        </div>
-
-        <div className="md:col-span-2 flex flex-col gap-1.5">
-          <label htmlFor="form-vehicle-year" className="text-[11px] font-bold text-gray-400 pr-1">سنة الصنع</label>
-          <input
-            id="form-vehicle-year"
-            type="number"
-            value={vehicleYear}
-            onChange={(e) => setVehicleYear(e.target.value)}
-            placeholder="مثال: 2025"
-            className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/80 rounded-xl text-sm font-bold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all text-gray-800 outline-none"
-          />
-        </div>
-
-        <div className="md:col-span-3 flex flex-col gap-1.5">
-          <label htmlFor="form-status" className="text-[11px] font-bold text-gray-400 pr-1 flex items-center gap-1">
-            <FiTag className="w-3.5 h-3.5" />
-            <span>الحالة الافتراضية *</span>
-          </label>
-          <select
-            id="form-status"
-            value={status}
-            onChange={(e) => setStatus(e.target.value as BookingStatus)}
-            className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/80 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all cursor-pointer outline-none"
-          >
-            {statusesList.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
-
-        {/* Row 3: Services & Date/Time appointments */}
-        <div className="md:col-span-4 flex flex-col gap-1.5">
-          <label htmlFor="form-service-type" className="text-[11px] font-bold text-gray-400 pr-1 flex items-center gap-1">
-            <HiSparkles className="w-3.5 h-3.5" />
-            <span>الخدمة المطلوبة *</span>
-          </label>
-          <select
-            id="form-service-type"
-            value={serviceType}
-            onChange={(e) => setServiceType(e.target.value)}
-            className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/80 rounded-xl text-xs font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all cursor-pointer outline-none"
-          >
-            {servicesList.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
-
-        <div className="md:col-span-3 flex flex-col gap-1.5">
-          <label htmlFor="form-booking-date" className="text-[11px] font-bold text-gray-400 pr-1 flex items-center gap-1">
-            <FiCalendar className="w-3.5 h-3.5" />
+          <label htmlFor="form-booking-date" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
+            <FiCalendar className="w-3.5 h-3.5 text-slate-400" />
             <span>تاريخ الحجز المختار *</span>
           </label>
           <input
             id="form-booking-date"
             type="date"
             required
-            min={todayStr}
             value={bookingDate}
             onChange={(e) => {
               setBookingDate(e.target.value);
               setSelectedTimeSlot('');
             }}
-            className="w-full px-4 h-11 bg-neutral-50 border border-neutral-200/80 rounded-xl text-sm font-bold text-gray-700 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all outline-none"
+            className="w-full px-3.5 h-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all outline-none"
           />
         </div>
 
         <div className="md:col-span-5 flex flex-col gap-1.5">
-          <label htmlFor="form-time-slot" className="text-[11px] font-bold text-gray-400 pr-1 flex items-center gap-1">
-            <FiClock className="w-3.5 h-3.5" />
-            <span>الوقت المتاح *</span>
+          <label htmlFor="form-booking-time" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
+            <FiClock className="w-3.5 h-3.5 text-slate-400" />
+            <span>وقت الحجز المتاح *</span>
           </label>
           {bookingDate ? (
             <select
-              id="form-time-slot"
+              id="form-booking-time"
               value={selectedTimeSlot}
               onChange={(e) => setSelectedTimeSlot(e.target.value)}
-              className="w-full px-3 h-11 bg-neutral-50 border border-neutral-200/80 rounded-xl text-xs font-bold text-gray-750 focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all cursor-pointer outline-none"
+              className="w-full px-3 h-10 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all cursor-pointer outline-none"
             >
               <option value="">-- اختر وقت الحجز المتاح --</option>
               {slots.map((slot) => {
@@ -358,42 +267,61 @@ export const BookingForm = React.memo<BookingFormProps>(({ bookings, onSubmitBoo
                     value={slot.key} 
                     disabled={booked}
                   >
-                    {slot.label} {booked ? '(محجوز)' : ''}
+                    {slot.label} {booked ? '(محجوز مسبقاً)' : ''}
                   </option>
                 );
               })}
             </select>
           ) : (
-            <div className="h-11 bg-neutral-50 border border-neutral-200/50 rounded-xl flex items-center px-4 text-xs text-gray-400 font-bold">
-              يرجى اختيار تاريخ الزيارة أولاً لإدراج الساعات المتاحة
+            <div className="h-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center px-4 text-xs text-slate-400 font-medium">
+              يرجى اختيار تاريخ الزيارة أولاً لعرض الأوقات المتاحة
             </div>
           )}
         </div>
 
-        {/* Row 4: Customer Notes History */}
+        <div className="md:col-span-3 flex flex-col gap-1.5">
+          <label htmlFor="form-status" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
+            <FiTag className="w-3.5 h-3.5 text-slate-400" />
+            <span>الحالة الأولية *</span>
+          </label>
+          <select
+            id="form-status"
+            value={status}
+            onChange={(e) => setStatus(e.target.value as BookingDbStatus)}
+            className="w-full px-3 h-10 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all cursor-pointer outline-none"
+          >
+            {statusesList.map(s => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Row 3: Notes */}
         <div className="md:col-span-12 flex flex-col gap-1.5">
-          <label htmlFor="form-notes" className="text-[11px] font-bold text-gray-400 pr-1 flex items-center gap-1">
-            <FiFileText className="w-3.5 h-3.5" />
-            <span>ملاحظات العميل التاريخية (سجل المتابعة)</span>
+          <label htmlFor="form-notes" className="text-[11px] font-bold text-slate-600 pr-1 flex items-center gap-1.5">
+            <FiFileText className="w-3.5 h-3.5 text-slate-400" />
+            <span>ملاحظات إضافية (اختياري)</span>
           </label>
           <textarea
             id="form-notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={2}
-            placeholder="مثال: تم التواصل لتأكيد الموعد.. مهتم بباقة عزل وحماية طلاء كاملة..."
-            className="w-full p-3 bg-neutral-50 border border-neutral-200/80 rounded-xl text-sm font-semibold focus:border-[#F4C542] focus:bg-white focus:ring-4 focus:ring-[#F4C542]/10 transition-all text-gray-800 outline-none resize-none"
+            placeholder="مثال: حجز احتفال عيد ميلاد، يطلبون تنظيم منافسة خاصة بين فريقين..."
+            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all outline-none resize-none"
           />
         </div>
 
         {/* Submit */}
-        <div className="md:col-span-12 flex justify-end mt-2">
+        <div className="md:col-span-12 flex justify-end mt-1">
           <button
             type="submit"
-            className="btn-primary-luxury px-8 py-3.5 text-sm w-full md:w-auto"
+            className="btn-primary-luxury px-6 py-2.5 text-xs font-bold"
           >
-            <FiPlusCircle className="w-5 h-5" />
-            <span>حفظ وتأكيد حجز العميل</span>
+            <FiPlusCircle className="w-4 h-4" />
+            <span>تأكيد وتسجيل الحجز</span>
           </button>
         </div>
       </form>
