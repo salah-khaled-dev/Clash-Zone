@@ -1,4 +1,5 @@
 import { translateStatus, formatPeopleCount } from './translations';
+import { toPostgresTime, calculateEndTime24 } from './timeSlots';
 
 const arabicDateFormatter = new Intl.DateTimeFormat("ar-SA-u-ca-gregory", {
   day: 'numeric',
@@ -42,12 +43,31 @@ export function formatSingleArabicTime(timeStr: string): { formatted: string; pe
   if (!timeStr) return null;
   const clean = timeStr.trim().toUpperCase();
 
-  const match12 = clean.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
+  const match12 = clean.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM|مساءً|صباحًا|ظهرًا)?$/);
   if (match12) {
-    const [, hours, minutes, ampm] = match12;
+    const [, hours, minutes, ind] = match12;
     const hr = parseInt(hours, 10);
-    const formattedHour = String(hr).padStart(2, '0');
-    const period = (hr === 12 && ampm === "PM") ? "ظهرًا" : (ampm === "AM" ? "صباحًا" : "مساءً");
+    const indicator = ind || (hr >= 12 ? 'PM' : 'AM');
+    
+    // Normalize to 12-hour display
+    let displayHour: number;
+    let period: string;
+
+    if (indicator === 'PM' || indicator === 'مساءً') {
+      period = (hr === 12) ? 'ظهرًا' : 'مساءً';
+      displayHour = hr > 12 ? hr - 12 : (hr === 0 ? 12 : hr);
+    } else if (indicator === 'AM' || indicator === 'صباحًا') {
+      period = 'صباحًا';
+      displayHour = (hr === 12 || hr === 0) ? 12 : hr;
+    } else if (indicator === 'ظهرًا') {
+      period = 'ظهرًا';
+      displayHour = 12;
+    } else {
+      period = hr === 12 ? 'ظهرًا' : (hr > 12 ? 'مساءً' : 'صباحًا');
+      displayHour = hr === 0 ? 12 : (hr > 12 ? hr - 12 : hr);
+    }
+
+    const formattedHour = String(displayHour).padStart(2, '0');
     return { formatted: `${formattedHour}:${minutes}`, period };
   }
 
@@ -65,21 +85,47 @@ export function formatSingleArabicTime(timeStr: string): { formatted: string; pe
   return null;
 }
 
-export function formatArabicTime(timeStr: string): string {
+/**
+ * Format Arabic time display:
+ * - If duration_minutes is provided (30 or 60): dynamically calculates end time
+ *   and displays full range (handles midnight crossing cleanly e.g. "من 11:30 مساءً إلى 12:30 صباحًا").
+ * - If duration_minutes is NULL: displays only start time (e.g. "12:00 ظهرًا")
+ *   without inventing historical durations.
+ */
+export function formatArabicTime(timeStr: string, durationMinutes?: number | null): string {
   if (!timeStr) return "";
   const clean = timeStr.trim();
 
-  // Check if timeStr is an interval range e.g. "12:00 PM - 01:00 PM"
+  // If explicit duration is provided (30 or 60), dynamically calculate end time
+  if (durationMinutes === 30 || durationMinutes === 60) {
+    const startTime24 = toPostgresTime(clean);
+    const endTime24 = calculateEndTime24(startTime24, durationMinutes);
+    
+    const start = formatSingleArabicTime(startTime24);
+    const end = formatSingleArabicTime(endTime24);
+
+    if (start && end) {
+      if (start.period === end.period) {
+        return `من ${start.formatted} إلى ${end.formatted} ${end.period}`;
+      }
+      return `من ${start.formatted} ${start.period} إلى ${end.formatted} ${end.period}`;
+    }
+  }
+
+  // Check if legacy timeStr already contains an explicit range
   const parts = clean.split(/\s*[-–—]\s*|\s+إلى\s+/i);
   if (parts.length >= 2) {
     const start = formatSingleArabicTime(parts[0]);
     const end = formatSingleArabicTime(parts[1]);
     if (start && end) {
-      const periodLead = start.period === end.period ? "" : ` ${start.period}`;
-      return `من ${start.formatted}${periodLead} إلى ${end.formatted} ${end.period}`;
+      if (start.period === end.period) {
+        return `من ${start.formatted} إلى ${end.formatted} ${end.period}`;
+      }
+      return `من ${start.formatted} ${start.period} إلى ${end.formatted} ${end.period}`;
     }
   }
 
+  // Older record with NULL duration: DO NOT invent historical duration
   const single = formatSingleArabicTime(clean);
   if (single) {
     return `${single.formatted} ${single.period}`;
@@ -88,25 +134,44 @@ export function formatArabicTime(timeStr: string): string {
   return timeStr;
 }
 
-export function getBookingDurationBadge(timeStr: string): { label: string; duration: 30 | 60; colorClass: string } {
-  if (!timeStr) return { label: '٣٠ دقيقة', duration: 30, colorClass: 'bg-blue-50 text-blue-700 border-blue-200' };
-  const clean = timeStr.trim();
-  const parts = clean.split(/\s*[-–—]\s*|\s+إلى\s+/i);
-  if (parts.length >= 2) {
-    const start = formatSingleArabicTime(parts[0]);
-    const end = formatSingleArabicTime(parts[1]);
-    if (start && end) {
-      const [sh, sm] = start.formatted.split(':').map(Number);
-      const [eh, em] = end.formatted.split(':').map(Number);
-      const sH24 = (start.period === 'مساءً' && sh < 12) ? sh + 12 : (start.period === 'صباحًا' && sh === 12 ? 0 : sh);
-      const eH24 = (end.period === 'مساءً' && eh < 12) ? eh + 12 : (end.period === 'صباحًا' && eh === 12 ? 0 : eh);
-      const diff = (eH24 * 60 + em) - (sH24 * 60 + sm);
-      if (diff >= 45) {
-        return { label: 'ساعة كاملة', duration: 60, colorClass: 'bg-purple-50 text-purple-700 border-purple-200' };
+/**
+ * Get duration badge config.
+ * For older records with NULL duration, returns null without inventing durations.
+ */
+export function getBookingDurationBadge(
+  timeStr: string, 
+  durationMinutes?: number | null
+): { label: string; duration: 30 | 60; colorClass: string } | null {
+  if (durationMinutes === 60) {
+    return { label: 'ساعة كاملة', duration: 60, colorClass: 'bg-purple-50 text-purple-700 border-purple-200' };
+  }
+  if (durationMinutes === 30) {
+    return { label: '٣٠ دقيقة', duration: 30, colorClass: 'bg-blue-50 text-blue-700 border-blue-200' };
+  }
+
+  // If durationMinutes is explicitly null or undefined, check if timeStr has an explicit range
+  if (timeStr) {
+    const clean = timeStr.trim();
+    const parts = clean.split(/\s*[-–—]\s*|\s+إلى\s+/i);
+    if (parts.length >= 2) {
+      const start = formatSingleArabicTime(parts[0]);
+      const end = formatSingleArabicTime(parts[1]);
+      if (start && end) {
+        const [sh, sm] = start.formatted.split(':').map(Number);
+        const [eh, em] = end.formatted.split(':').map(Number);
+        const sH24 = (start.period === 'مساءً' && sh < 12) ? sh + 12 : (start.period === 'صباحًا' && sh === 12 ? 0 : sh);
+        const eH24 = (end.period === 'مساءً' && eh < 12) ? eh + 12 : (end.period === 'صباحًا' && eh === 12 ? 0 : eh);
+        const diff = (eH24 * 60 + em) - (sH24 * 60 + sm);
+        if (diff >= 45) {
+          return { label: 'ساعة كاملة', duration: 60, colorClass: 'bg-purple-50 text-purple-700 border-purple-200' };
+        }
+        return { label: '٣٠ دقيقة', duration: 30, colorClass: 'bg-blue-50 text-blue-700 border-blue-200' };
       }
     }
   }
-  return { label: '٣٠ دقيقة', duration: 30, colorClass: 'bg-blue-50 text-blue-700 border-blue-200' };
+
+  // Older record with NULL duration: return null (no duration badge)
+  return null;
 }
 
 export function formatStatus(status: string): string {
@@ -156,4 +221,3 @@ export function formatCreationDateTime(isoStr?: string | null): string {
 }
 
 export { formatPeopleCount };
-

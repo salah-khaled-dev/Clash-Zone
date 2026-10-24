@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { FiX, FiCalendar, FiClock, FiUser, FiPhone, FiTag, FiFileText, FiUsers } from 'react-icons/fi';
 import type { Booking, BookingCategory, BookingDbStatus } from '../types/booking';
 import { WARZONE_CATEGORIES, STATUS_ARABIC_MAP } from '../types/booking';
-import { generateSlots, parseBookingInterval } from '../utils/timeSlots';
+import { generateSlots, toPostgresTime } from '../utils/timeSlots';
 import type { BookingDuration } from '../utils/timeSlots';
 import { useToast } from './useToast';
 
@@ -27,13 +27,13 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
     (booking.category as BookingCategory) || 'عميل جديد'
   );
   const [date, setDate] = useState(booking.booking_date);
-  const [selectedSlot, setSelectedSlot] = useState(booking.booking_time);
+  const [selectedSlot, setSelectedSlot] = useState(() => toPostgresTime(booking.booking_time));
   const [status, setStatus] = useState<BookingDbStatus>(booking.status || 'pending');
   const [notes, setNotes] = useState(booking.notes || '');
 
   // Duration & Slots state
   const [duration, setDuration] = useState<BookingDuration>(() => {
-    return parseBookingInterval(booking.booking_time).duration;
+    return booking.duration_minutes === 60 ? 60 : 30;
   });
   const slots = useMemo(() => generateSlots(duration), [duration]);
 
@@ -69,7 +69,8 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
       number_of_people: count,
       category: category,
       booking_date: date,
-      booking_time: selectedSlot,
+      booking_time: toPostgresTime(selectedSlot),
+      duration_minutes: duration,
       status: status,
       notes: notes.trim() || null
     };
@@ -217,7 +218,10 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                   type="button"
                   onClick={() => {
                     setDuration(30);
-                    setSelectedSlot('');
+                    const newSlots = generateSlots(30);
+                    if (!newSlots.some(s => s.startTime24 === selectedSlot)) {
+                      setSelectedSlot('');
+                    }
                   }}
                   className={`rounded-lg text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${
                     duration === 30
@@ -231,7 +235,10 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                   type="button"
                   onClick={() => {
                     setDuration(60);
-                    setSelectedSlot('');
+                    const newSlots = generateSlots(60);
+                    if (!newSlots.some(s => s.startTime24 === selectedSlot)) {
+                      setSelectedSlot('');
+                    }
                   }}
                   className={`rounded-lg text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${
                     duration === 60

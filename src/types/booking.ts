@@ -58,6 +58,7 @@ export interface Booking {
   category: BookingCategory;
   booking_date: string;
   booking_time: string;
+  duration_minutes?: number | null;
   status: BookingDbStatus;
   notes: string | null;
   created_at?: string;

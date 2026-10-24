@@ -48,7 +48,7 @@ export const BookingCardRow = React.memo<BookingCardRowProps>(({
   const { showToast } = useToast();
 
   const displayDate = formatArabicDate(booking.booking_date);
-  const displayTime = formatArabicTime(booking.booking_time);
+  const displayTime = formatArabicTime(booking.booking_time, booking.duration_minutes);
   const peopleText = formatPeopleCount(booking.number_of_people);
   const categoryIcon = getCategoryIcon(booking.category);
 
@@ -93,7 +93,7 @@ export const BookingCardRow = React.memo<BookingCardRowProps>(({
 
   return (
     <div
-      className="w-full box-border bg-white border border-slate-200/90 hover:border-slate-300 rounded-xl p-4 shadow-sm flex flex-col lg:grid lg:grid-cols-[280px_130px_140px_145px_130px_auto] lg:items-center gap-3.5 relative card-hover-effect animate-fade-in-up"
+      className="w-full box-border bg-white border border-slate-200/90 hover:border-slate-300 rounded-xl p-4 shadow-sm flex flex-col lg:grid lg:grid-cols-[280px_130px_140px_165px_130px_auto] lg:items-center gap-3.5 relative card-hover-effect animate-fade-in-up"
     >
       {/* Column 1: Customer Information & Creator Metadata */}
       <div className="flex items-start gap-2.5 w-full min-w-0" dir="rtl">
@@ -174,10 +174,22 @@ export const BookingCardRow = React.memo<BookingCardRowProps>(({
           <FiCalendar className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
           <span className="leading-none">{displayDate}</span>
         </span>
-        <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md flex items-center gap-1">
-          <FiClock className="w-3 h-3 text-slate-400 flex-shrink-0" />
-          <span className="leading-none">{displayTime}</span>
-        </span>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md flex items-center gap-1">
+            <FiClock className="w-3 h-3 text-slate-400 flex-shrink-0" />
+            <span className="leading-none">{displayTime}</span>
+          </span>
+          {booking.duration_minutes === 60 && (
+            <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 leading-none">
+              ساعة كاملة
+            </span>
+          )}
+          {booking.duration_minutes === 30 && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 leading-none">
+              ٣٠ د
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Column 5: Status Badge */}

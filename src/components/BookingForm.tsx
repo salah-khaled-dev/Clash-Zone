@@ -12,7 +12,7 @@ import {
   FiPlus,
   FiMapPin
 } from 'react-icons/fi';
-import { generateSlots } from '../utils/timeSlots';
+import { generateSlots, toPostgresTime } from '../utils/timeSlots';
 import type { BookingDuration } from '../utils/timeSlots';
 import { useToast } from './useToast';
 import type { Booking, BookingCategory, BookingDbStatus } from '../types/booking';
@@ -27,6 +27,7 @@ interface BookingFormProps {
     category: BookingCategory;
     booking_date: string;
     booking_time: string;
+    duration_minutes: BookingDuration;
     status: BookingDbStatus;
     notes: string;
   }) => void;
@@ -88,7 +89,8 @@ export const BookingForm = React.memo<BookingFormProps>(({ onSubmitBooking }) =>
       number_of_people: count,
       category: category,
       booking_date: bookingDate,
-      booking_time: selectedTimeSlot,
+      booking_time: toPostgresTime(selectedTimeSlot),
+      duration_minutes: duration,
       status: status,
       notes: notes.trim()
     });

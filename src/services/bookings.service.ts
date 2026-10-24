@@ -2,40 +2,45 @@ import { supabase } from '../lib/supabase';
 import type { Booking, BookingCategory, BookingDbStatus, UserRole, UserProfile } from '../types/booking';
 import { STATUS_DB_MAP, WARZONE_CATEGORIES } from '../types/booking';
 import type { Database } from '../types/database';
-import { normalizeTimeSlot } from '../utils/timeSlots';
+import { toPostgresTime } from '../utils/timeSlots';
 
 type WarzoneBookingRow = Database['public']['Tables']['warzone_bookings']['Row'];
 type WarzoneBookingInsert = Database['public']['Tables']['warzone_bookings']['Insert'];
 type WarzoneBookingUpdate = Database['public']['Tables']['warzone_bookings']['Update'];
 type WarzoneBookingFeedRow = Database['public']['Views']['warzone_bookings_feed']['Row'];
 
-function normalizeBooking(row: WarzoneBookingRow | WarzoneBookingFeedRow | any): Booking {
-  const parsedPeople = Number(row.number_of_people);
+function normalizeBooking(row: WarzoneBookingRow | WarzoneBookingFeedRow | Record<string, unknown>): Booking {
+  const r = row as Record<string, unknown>;
+  const parsedPeople = Number(r.number_of_people);
   const numberOfPeople = !isNaN(parsedPeople) && parsedPeople > 0 ? Math.floor(parsedPeople) : 1;
-  const rawStatus = (row.status || 'pending').toLowerCase();
+  const rawStatus = (typeof r.status === 'string' ? r.status : 'pending').toLowerCase();
   const status: BookingDbStatus = (STATUS_DB_MAP[rawStatus] || 'pending') as BookingDbStatus;
   
+  const rawCat = typeof r.category === 'string' ? r.category : '';
   const category = (
-    WARZONE_CATEGORIES.includes(row.category as BookingCategory) 
-      ? row.category 
+    WARZONE_CATEGORIES.includes(rawCat as BookingCategory) 
+      ? rawCat 
       : 'عميل جديد'
   ) as BookingCategory;
 
   return {
-    id: row.id,
-    customer_name: row.customer_name,
-    phone: row.phone,
+    id: String(r.id || ''),
+    customer_name: String(r.customer_name || ''),
+    phone: String(r.phone || ''),
     number_of_people: numberOfPeople,
     category: category,
-    booking_date: row.booking_date,
-    booking_time: normalizeTimeSlot(row.booking_time),
+    booking_date: String(r.booking_date || ''),
+    booking_time: toPostgresTime(typeof r.booking_time === 'string' ? r.booking_time : null),
+    duration_minutes: r.duration_minutes !== undefined && r.duration_minutes !== null 
+      ? Number(r.duration_minutes) 
+      : null,
     status: status,
-    notes: row.notes,
-    created_at: row.created_at || undefined,
-    updated_at: row.updated_at || undefined,
-    created_by: row.created_by || null,
-    creator_name: row.creator_name || (row.created_by ? 'غير مسجل' : 'غير مسجل'),
-    creator_role: (row.creator_role as UserRole) || null,
+    notes: typeof r.notes === 'string' ? r.notes : null,
+    created_at: typeof r.created_at === 'string' ? r.created_at : undefined,
+    updated_at: typeof r.updated_at === 'string' ? r.updated_at : undefined,
+    created_by: typeof r.created_by === 'string' ? r.created_by : null,
+    creator_name: typeof r.creator_name === 'string' ? r.creator_name : (r.created_by ? 'غير مسجل' : 'غير مسجل'),
+    creator_role: (r.creator_role as UserRole) || null,
   };
 }
 
@@ -151,13 +156,16 @@ export const bookingsService = {
       throw new Error('وقت الحجز مطلوب');
     }
 
+    const duration = booking.duration_minutes === 60 ? 60 : 30;
+
     const insertData: WarzoneBookingInsert = {
       customer_name: booking.customer_name.trim(),
       phone: booking.phone.trim(),
       number_of_people: numberOfPeople,
       category: category,
       booking_date: booking.booking_date,
-      booking_time: booking.booking_time,
+      booking_time: toPostgresTime(booking.booking_time),
+      duration_minutes: duration,
       status: status,
       notes: booking.notes ? booking.notes.trim() : null,
     };
@@ -217,7 +225,11 @@ export const bookingsService = {
     }
 
     if (bookingData.booking_time !== undefined) {
-      updateData.booking_time = bookingData.booking_time;
+      updateData.booking_time = toPostgresTime(bookingData.booking_time);
+    }
+
+    if (bookingData.duration_minutes !== undefined) {
+      updateData.duration_minutes = bookingData.duration_minutes;
     }
 
     if (bookingData.status !== undefined) {
@@ -253,13 +265,22 @@ export const bookingsService = {
   },
 
   /**
-   * Reschedule booking time & date (preserves existing status unless specified)
+   * Reschedule booking time & date (preserves existing status & duration unless specified)
    */
-  async rescheduleBooking(id: string, date: string, time: string, status?: BookingDbStatus): Promise<Booking> {
+  async rescheduleBooking(
+    id: string, 
+    date: string, 
+    time: string, 
+    duration?: number | null, 
+    status?: BookingDbStatus
+  ): Promise<Booking> {
     const payload: Partial<Booking> = {
       booking_date: date,
-      booking_time: time,
+      booking_time: toPostgresTime(time),
     };
+    if (duration !== undefined) {
+      payload.duration_minutes = duration;
+    }
     if (status) {
       payload.status = status;
     }

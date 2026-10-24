@@ -8,7 +8,7 @@ import {
   FiUsers
 } from 'react-icons/fi';
 import type { Booking } from '../types/booking';
-import { generateSlots, isBookingInSlot, isBookingStartOfSlot, parseBookingInterval } from '../utils/timeSlots';
+import { generateSlots, isBookingInSlot, isBookingStartOfSlot } from '../utils/timeSlots';
 import { formatArabicDate, formatPeopleCount, getTodayRiyadhStr } from '../utils/bookingFormatters';
 import { getCategoryIcon, translateStatus } from '../utils/translations';
 
@@ -85,16 +85,15 @@ export const CalendarView = React.memo<CalendarViewProps>(({
   };
 
   const cellBookings = useMemo(() => {
-    const map: Record<string, { booking: Booking; isStart: boolean; duration: number }[]> = {};
+    const map: Record<string, { booking: Booking; isStart: boolean; duration: number | null }[]> = {};
     bookings.forEach(b => {
       if (b.status !== 'cancelled') {
-        const interval = parseBookingInterval(b.booking_time);
         timeSlots.forEach(slot => {
-          if (isBookingInSlot(b.booking_time, slot.key)) {
+          if (isBookingInSlot(b, slot)) {
             const key = `${b.booking_date}_${slot.key}`;
-            const isStart = isBookingStartOfSlot(b.booking_time, slot.key);
+            const isStart = isBookingStartOfSlot(b, slot);
             if (!map[key]) map[key] = [];
-            map[key].push({ booking: b, isStart, duration: interval.duration });
+            map[key].push({ booking: b, isStart, duration: b.duration_minutes ?? null });
           }
         });
       }
@@ -129,27 +128,10 @@ export const CalendarView = React.memo<CalendarViewProps>(({
     const booking = bookings.find(b => b.id === bookingId);
     if (!booking) return;
 
-    const bInterval = parseBookingInterval(booking.booking_time);
-    const targetSlot = timeSlots.find(s => s.key === slotKey);
-    
-    let newSlotTime = slotKey;
-    if (bInterval.duration === 60 && targetSlot) {
-      const startHour = Math.floor(targetSlot.startMinutes / 60);
-      const startMinute = targetSlot.startMinutes % 60;
-      const endMinutes = targetSlot.startMinutes + 60;
-      const endHour = Math.floor(endMinutes / 60);
-      const endMinute = endMinutes % 60;
+    const targetSlot = timeSlots.find(s => s.key === slotKey || s.startTime24 === slotKey);
+    if (!targetSlot) return;
 
-      const startIsPM = startHour >= 12;
-      const startDisplayHour = startHour === 0 ? 12 : startHour > 12 ? startHour - 12 : startHour;
-      const startFormatted = `${String(startDisplayHour).padStart(2, '0')}:${String(startMinute).padStart(2, '0')} ${startIsPM ? 'PM' : 'AM'}`;
-
-      const endIsPM = endHour >= 12;
-      const endDisplayHour = endHour === 0 ? 12 : endHour > 12 ? endHour - 12 : endHour;
-      const endFormatted = `${String(endDisplayHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')} ${endIsPM ? 'PM' : 'AM'}`;
-
-      newSlotTime = `${startFormatted} - ${endFormatted}`;
-    }
+    const newSlotTime = targetSlot.startTime24;
 
     if (booking.booking_date === dateStr && booking.booking_time === newSlotTime) {
       return;

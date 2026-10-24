@@ -316,6 +316,7 @@ const MainAppContent: React.FC = () => {
     category: BookingCategory;
     booking_date: string;
     booking_time: string;
+    duration_minutes: 30 | 60;
     status: BookingDbStatus;
     notes: string;
   }) => {
@@ -358,20 +359,8 @@ const MainAppContent: React.FC = () => {
 
   // Handle Drag & Drop Reschedule in Calendar View
   const handleReschedule = useCallback(async (booking: Booking, newDate: string, newSlot: string) => {
-    const isOccupied = bookings.some(
-      b => b.id !== booking.id && 
-           b.booking_date === newDate && 
-           b.booking_time === newSlot && 
-           b.status !== 'cancelled'
-    );
-
-    if (isOccupied) {
-      showToast("هذا الموعد محجوز لفعالية أخرى بالفعل! اختر موعداً متاحاً.", "error");
-      return;
-    }
-
     try {
-      const updated = await bookingsService.rescheduleBooking(booking.id, newDate, newSlot);
+      const updated = await bookingsService.rescheduleBooking(booking.id, newDate, newSlot, booking.duration_minutes);
       setBookings(prev => prev.map(b => b.id === updated.id ? updated : b));
       showToast(`تم تعديل موعد حجز (${booking.customer_name}) إلى ${newDate} بنجاح`, "success");
     } catch (err: unknown) {
@@ -379,7 +368,7 @@ const MainAppContent: React.FC = () => {
       console.error('Error rescheduling booking:', e);
       showToast(e.message || "فشلت عملية إعادة الجدولة", "error");
     }
-  }, [bookings, showToast]);
+  }, [showToast]);
 
   // Smooth footer navigation handler
   const handleFooterNav = useCallback((target: 'dashboard' | 'bookings' | 'calendar') => {
@@ -554,7 +543,7 @@ const MainAppContent: React.FC = () => {
   // WhatsApp link template
   const getWhatsAppLink = (b: Booking) => {
     const displayDate = formatArabicDate(b.booking_date);
-    const displayTime = formatArabicTime(b.booking_time);
+    const displayTime = formatArabicTime(b.booking_time, b.duration_minutes);
     const rawMessage = `السلام عليكم،\n\nمعك War Zone.\n\nنود تأكيد حجزكم لعدد ${b.number_of_people} أفراد بتاريخ ${displayDate}\nالساعة ${displayTime}.\n\nأهلاً بكم في War Zone!`;
     const encodedMessage = encodeURIComponent(rawMessage);
     
@@ -787,7 +776,7 @@ const MainAppContent: React.FC = () => {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
                   {todaysAppointments.map(appointment => {
-                    const displayTime = formatArabicTime(appointment.booking_time);
+                    const displayTime = formatArabicTime(appointment.booking_time, appointment.duration_minutes);
                     const peopleText = formatPeopleCount(appointment.number_of_people);
                     const categoryIcon = getCategoryIcon(appointment.category);
 
@@ -860,7 +849,7 @@ const MainAppContent: React.FC = () => {
                 <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin max-w-full">
                   {upcoming7DaysBookings.map(b => {
                     const displayDate = formatArabicDate(b.booking_date);
-                    const displayTime = formatArabicTime(b.booking_time);
+                    const displayTime = formatArabicTime(b.booking_time, b.duration_minutes);
                     const peopleText = formatPeopleCount(b.number_of_people);
                     const categoryIcon = getCategoryIcon(b.category);
 

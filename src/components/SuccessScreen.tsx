@@ -21,7 +21,7 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
   onBookAnother
 }) => {
   const displayDate = formatArabicDate(booking.booking_date);
-  const displayTime = formatArabicTime(booking.booking_time);
+  const displayTime = formatArabicTime(booking.booking_time, booking.duration_minutes);
   const peopleText = formatPeopleCount(booking.number_of_people);
   const categoryIcon = getCategoryIcon(booking.category);
 
@@ -102,6 +102,11 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
               <div className="flex flex-col">
                 <span className="text-[10px] text-slate-500 font-bold leading-none">الموعد المحدد</span>
                 <span className="text-xs font-bold text-slate-800 mt-0.5">{displayTime}</span>
+                {booking.duration_minutes && (
+                  <span className="text-[9px] text-slate-500 font-medium">
+                    المدة: {booking.duration_minutes === 60 ? 'ساعة كاملة' : '٣٠ دقيقة'}
+                  </span>
+                )}
               </div>
             </div>
           </div>
