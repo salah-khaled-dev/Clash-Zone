@@ -47,7 +47,7 @@ export type Database = {
                   Relationships: [
                     
                   ]
-                },"ClashZone_bookings": {
+                },"warzone_bookings": {
                   Row: {
                     "booking_date": string,"booking_time": string,"category": string,"created_at": string | null,"created_by": string | null,"customer_name": string,"duration_minutes": number | null,"id": string,"notes": string | null,"number_of_people": number,"phone": string,"status": string,"updated_at": string | null
                   }
@@ -61,7 +61,7 @@ export type Database = {
                   Relationships: [
                     
                   ]
-                },"ClashZone_user_roles": {
+                },"warzone_user_roles": {
                   Row: {
                     "created_at": string | null,"email": string | null,"full_name": string | null,"is_active": boolean,"role": string,"user_id": string
                   }
@@ -78,7 +78,7 @@ export type Database = {
                 }
           }
           Views: {
-            "ClashZone_bookings_feed": {
+            "warzone_bookings_feed": {
                   Row: {
                     "booking_date": string,"booking_time": string,"category": string,"created_at": string | null,"created_by": string | null,"creator_name": string | null,"creator_role": string | null,"customer_name": string,"duration_minutes": number | null,"id": string,"notes": string | null,"number_of_people": number,"phone": string,"status": string,"updated_at": string | null
                   }
@@ -89,16 +89,16 @@ export type Database = {
                 }
           }
           Functions: {
-            "ClashZone_current_role":
+            "warzone_current_role":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
-"ClashZone_get_my_role":
+"warzone_get_my_role":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
-"ClashZone_is_admin":
+"warzone_is_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
-"ClashZone_is_manager_or_admin":
+"warzone_is_manager_or_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            }
           }

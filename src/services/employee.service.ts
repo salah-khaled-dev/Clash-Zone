@@ -45,7 +45,7 @@ export const employeeService = {
       console.error('Error listing employees from Edge Function, attempting fallback:', error);
       // Fallback: Query ClashZone_user_roles directly via RLS
       const { data: rolesData, error: rolesErr } = await supabase
-        .from('ClashZone_user_roles')
+        .from('warzone_user_roles')
         .select('*')
         .order('created_at', { ascending: false });
 

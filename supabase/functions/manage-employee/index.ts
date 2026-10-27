@@ -55,7 +55,7 @@ serve(async (req: Request) => {
 
     // 2. Read caller role and active state from trusted database
     const { data: roleRow, error: roleError } = await supabaseAdmin
-      .from("ClashZone_user_roles")
+      .from("warzone_user_roles")
       .select("role, is_active")
       .eq("user_id", callerUser.id)
       .maybeSingle();
@@ -84,7 +84,7 @@ serve(async (req: Request) => {
       // -------------------------------------------------------------
       case "list": {
         const { data: roles, error: rolesQueryErr } = await supabaseAdmin
-          .from("ClashZone_user_roles")
+          .from("warzone_user_roles")
           .select("*")
           .order("created_at", { ascending: false });
 
@@ -199,7 +199,7 @@ serve(async (req: Request) => {
 
         // Upsert role & full_name in public.ClashZone_user_roles
         const { error: upsertRoleErr } = await supabaseAdmin
-          .from("ClashZone_user_roles")
+          .from("warzone_user_roles")
           .upsert({
             user_id: newUser.user.id,
             role: assignedRole,
@@ -282,7 +282,7 @@ serve(async (req: Request) => {
 
         if (Object.keys(updateData).length > 0) {
           const { error: updateErr } = await supabaseAdmin
-            .from("ClashZone_user_roles")
+            .from("warzone_user_roles")
             .update(updateData)
             .eq("user_id", user_id);
 
@@ -339,7 +339,7 @@ serve(async (req: Request) => {
         }
 
         const { error: updateRoleErr } = await supabaseAdmin
-          .from("ClashZone_user_roles")
+          .from("warzone_user_roles")
           .update({ role: new_role })
           .eq("user_id", user_id);
 
@@ -387,14 +387,14 @@ serve(async (req: Request) => {
         // Prevent deactivating the last active Admin
         if (disable) {
           const { data: targetRole } = await supabaseAdmin
-            .from("ClashZone_user_roles")
+            .from("warzone_user_roles")
             .select("role")
             .eq("user_id", user_id)
             .maybeSingle();
 
           if (targetRole?.role === "admin") {
             const { count } = await supabaseAdmin
-              .from("ClashZone_user_roles")
+              .from("warzone_user_roles")
               .select("*", { count: "exact", head: true })
               .eq("role", "admin")
               .eq("is_active", true);
@@ -410,7 +410,7 @@ serve(async (req: Request) => {
 
         // Update database active state
         await supabaseAdmin
-          .from("ClashZone_user_roles")
+          .from("warzone_user_roles")
           .update({ is_active: !disable })
           .eq("user_id", user_id);
 
@@ -492,14 +492,14 @@ serve(async (req: Request) => {
 
         // Prevent deleting the last active admin
         const { data: targetRole } = await supabaseAdmin
-          .from("ClashZone_user_roles")
+          .from("warzone_user_roles")
           .select("role")
           .eq("user_id", user_id)
           .maybeSingle();
 
         if (targetRole?.role === "admin") {
           const { count } = await supabaseAdmin
-            .from("ClashZone_user_roles")
+            .from("warzone_user_roles")
             .select("*", { count: "exact", head: true })
             .eq("role", "admin")
             .eq("is_active", true);
@@ -513,7 +513,7 @@ serve(async (req: Request) => {
         }
 
         // Delete from ClashZone_user_roles first
-        await supabaseAdmin.from("ClashZone_user_roles").delete().eq("user_id", user_id);
+        await supabaseAdmin.from("warzone_user_roles").delete().eq("user_id", user_id);
 
         // Delete from Supabase Auth
         const { error: delErr } = await supabaseAdmin.auth.admin.deleteUser(user_id);

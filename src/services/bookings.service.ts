@@ -4,10 +4,10 @@ import { STATUS_DB_MAP, ClashZone_CATEGORIES } from '../types/booking';
 import type { Database } from '../types/database';
 import { toPostgresTime } from '../utils/timeSlots';
 
-type ClashZoneBookingRow = Database['public']['Tables']['ClashZone_bookings']['Row'];
-type ClashZoneBookingInsert = Database['public']['Tables']['ClashZone_bookings']['Insert'];
-type ClashZoneBookingUpdate = Database['public']['Tables']['ClashZone_bookings']['Update'];
-type ClashZoneBookingFeedRow = Database['public']['Views']['ClashZone_bookings_feed']['Row'];
+type ClashZoneBookingRow = Database['public']['Tables']['warzone_bookings']['Row'];
+type ClashZoneBookingInsert = Database['public']['Tables']['warzone_bookings']['Insert'];
+type ClashZoneBookingUpdate = Database['public']['Tables']['warzone_bookings']['Update'];
+type ClashZoneBookingFeedRow = Database['public']['Views']['warzone_bookings_feed']['Row'];
 
 function normalizeBooking(row: ClashZoneBookingRow | ClashZoneBookingFeedRow | Record<string, unknown>): Booking {
   const r = row as Record<string, unknown>;
@@ -55,7 +55,7 @@ export const bookingsService = {
     }
 
     const { data, error } = await supabase
-      .from('ClashZone_user_roles')
+      .from('warzone_user_roles')
       .select('full_name, role, email, is_active, created_at')
       .eq('user_id', user.id)
       .maybeSingle();
@@ -93,7 +93,7 @@ export const bookingsService = {
    */
   async getBookings(): Promise<Booking[]> {
     const { data, error } = await supabase
-      .from('ClashZone_bookings_feed')
+      .from('warzone_bookings_feed')
       .select('*')
       .order('booking_date', { ascending: true })
       .order('booking_time', { ascending: true });
@@ -114,7 +114,7 @@ export const bookingsService = {
    */
   async getBookingById(id: string): Promise<Booking | null> {
     const { data, error } = await supabase
-      .from('ClashZone_bookings_feed')
+      .from('warzone_bookings_feed')
       .select('*')
       .eq('id', id)
       .maybeSingle();
@@ -171,7 +171,7 @@ export const bookingsService = {
     };
 
     const { data, error } = await supabase
-      .from('ClashZone_bookings')
+      .from('warzone_bookings')
       .insert([insertData])
       .select()
       .single();
@@ -242,7 +242,7 @@ export const bookingsService = {
     }
 
     const { data, error } = await supabase
-      .from('ClashZone_bookings')
+      .from('warzone_bookings')
       .update(updateData)
       .eq('id', id)
       .select()
@@ -319,7 +319,7 @@ export const bookingsService = {
    */
   async deleteBooking(id: string): Promise<boolean> {
     const { error } = await supabase
-      .from('ClashZone_bookings')
+      .from('warzone_bookings')
       .delete()
       .eq('id', id);
 
