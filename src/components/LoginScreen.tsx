@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { FiMail, FiLock, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 import { supabase } from '../lib/supabase';
 import { useToast } from './useToast';
-import warzoneArenaImg from '../assets/warzone_arena.webp';
-import warzoneOfficialBadge from '../assets/warzone_official_badge.webp';
+import ClashZoneArenaImg from '../assets/ClashZone_arena.webp';
+import ClashZoneOfficialBadge from '../assets/ClashZone_official_badge.webp';
 import SignatureFooter from './SignatureFooter';
 
 interface LoginScreenProps {
@@ -70,8 +70,8 @@ export const LoginScreen = React.memo<LoginScreenProps>(({ onLoginSuccess }) => 
        <div className="hidden md:flex md:flex-col md:col-span-6 relative overflow-hidden justify-between p-8 bg-slate-100 border-l border-slate-200 select-none">
   <div className="absolute inset-0 w-full h-full opacity-80">
             <img 
-              src={warzoneArenaImg} 
-              alt="War Zone Arena" 
+              src={ClashZoneArenaImg} 
+              alt="CLASH ZONE Arena" 
               className="w-full h-full object-cover"
             />
           </div>
@@ -80,19 +80,19 @@ export const LoginScreen = React.memo<LoginScreenProps>(({ onLoginSuccess }) => 
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-[#0c0e14] border border-slate-700/80 p-1 flex items-center justify-center shadow-xs">
                 <img 
-                  src={warzoneOfficialBadge} 
-                  alt="War Zone Mark" 
+                  src={ClashZoneOfficialBadge} 
+                  alt="CLASH ZONE Mark" 
                   className="w-full h-full object-contain"
                 />
               </div>
-              <span className="text-xs font-black text-slate-800 tracking-wider">WAR ZONE</span>
+              <span className="text-xs font-black text-slate-800 tracking-wider">CLASH ZONE</span>
             </div>
             <span className="text-[11px] font-bold text-red-700 bg-red-50 border border-red-200 px-3 py-1 rounded-full">
 ادارة الحجوزات             </span>
           </div>
 
           <div className="relative z-10 bg-white/95 backdrop-blur-xs rounded-xl p-6 border border-slate-200/90 shadow-xs">
-            <h4 className="text-base font-black text-slate-900 mb-2">منظومة إدارة حجوزات War Zone</h4>
+            <h4 className="text-base font-black text-slate-900 mb-2">منظومة إدارة حجوزات CLASH ZONE</h4>
             <p className="text-xs text-slate-600 leading-relaxed mb-4">
               منصة شاملة لتنسيق جداول الفعاليات، أعياد الميلاد، والزيارات المدرسية والجامعية، مع تتبع فوري لمواعيد وعدد المشاركين.
             </p>
@@ -117,12 +117,12 @@ export const LoginScreen = React.memo<LoginScreenProps>(({ onLoginSuccess }) => 
         {/* Left side: Login Form */}
         <div className="md:col-span-6 p-8 lg:p-12 flex flex-col justify-between bg-white text-right relative z-10">
           <div>
-            {/* Official War Zone Brand Header */}
+            {/* Official CLASH ZONE Brand Header */}
             <div className="flex items-center gap-4 mb-7 pb-5 border-b border-slate-150">
               <div className="w-14 h-14 rounded-2xl bg-[#0c0e14] border border-slate-800/90 shadow-sm flex items-center justify-center p-1.5 flex-shrink-0">
                 <img 
-                  src={warzoneOfficialBadge} 
-                  alt="War Zone Official Logo" 
+                  src={ClashZoneOfficialBadge} 
+                  alt="CLASH ZONE Official Logo" 
                   className="w-full h-full object-contain select-none"
                   loading="eager"
                 />
@@ -130,7 +130,7 @@ export const LoginScreen = React.memo<LoginScreenProps>(({ onLoginSuccess }) => 
               <div className="flex flex-col text-right">
                 <div className="flex items-center gap-2">
                   <span className="text-xl font-black text-slate-900 tracking-wider font-sans">
-                    WAR ZONE
+                    CLASH ZONE
                   </span>
                   <span className="text-[10px] font-black text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-md">
                     وار زون
@@ -161,7 +161,7 @@ export const LoginScreen = React.memo<LoginScreenProps>(({ onLoginSuccess }) => 
                   id="login-email"
                   type="email"
                   required
-                  placeholder="admin@warzone.com"
+                  placeholder="admin@ClashZone.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-3.5 h-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 placeholder-slate-400 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all outline-none"

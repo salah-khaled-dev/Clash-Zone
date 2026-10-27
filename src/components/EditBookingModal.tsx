@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { FiX, FiCalendar, FiClock, FiUser, FiPhone, FiTag, FiFileText, FiUsers } from 'react-icons/fi';
 import type { Booking, BookingCategory, BookingDbStatus } from '../types/booking';
-import { WARZONE_CATEGORIES, STATUS_ARABIC_MAP } from '../types/booking';
+import { ClashZone_CATEGORIES, STATUS_ARABIC_MAP } from '../types/booking';
 import { generateSlots, toPostgresTime } from '../utils/timeSlots';
 import type { BookingDuration } from '../utils/timeSlots';
 import { useToast } from './useToast';
@@ -179,7 +179,7 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                 onChange={(e) => setCategory(e.target.value as BookingCategory)}
                 className="w-full px-3 h-10 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all cursor-pointer outline-none"
               >
-                {WARZONE_CATEGORIES.map(cat => (
+                {ClashZone_CATEGORIES.map(cat => (
                   <option key={cat} value={cat}>
                     {cat}
                   </option>

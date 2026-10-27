@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { 
   FiUser, 
   FiPhone, 
@@ -16,7 +16,7 @@ import { generateSlots, toPostgresTime } from '../utils/timeSlots';
 import type { BookingDuration } from '../utils/timeSlots';
 import { useToast } from './useToast';
 import type { Booking, BookingCategory, BookingDbStatus } from '../types/booking';
-import { WARZONE_CATEGORIES, STATUS_ARABIC_MAP } from '../types/booking';
+import { ClashZone_CATEGORIES, STATUS_ARABIC_MAP } from '../types/booking';
 
 interface BookingFormProps {
   bookings: Booking[];
@@ -122,7 +122,7 @@ export const BookingForm = React.memo<BookingFormProps>(({ onSubmitBooking }) =>
         </h3>
         <span className="text-[11px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-3 py-1 rounded-lg flex items-center gap-1.5">
           <FiMapPin className="w-3.5 h-3.5 text-slate-400" />
-          <span>ميدان War Zone الرئيسي</span>
+          <span>ميدان CLASH ZONE الرئيسي</span>
         </span>
       </div>
 
@@ -209,7 +209,7 @@ export const BookingForm = React.memo<BookingFormProps>(({ onSubmitBooking }) =>
             onChange={(e) => setCategory(e.target.value as BookingCategory)}
             className="w-full px-3 h-10 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all cursor-pointer outline-none"
           >
-            {WARZONE_CATEGORIES.map(cat => (
+            {ClashZone_CATEGORIES.map(cat => (
               <option key={cat} value={cat}>
                 {cat}
               </option>

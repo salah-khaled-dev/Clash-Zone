@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+﻿import { supabase } from '../lib/supabase';
 
 export interface EmployeeAccount {
   user_id: string;
@@ -43,9 +43,9 @@ export const employeeService = {
 
     if (error) {
       console.error('Error listing employees from Edge Function, attempting fallback:', error);
-      // Fallback: Query warzone_user_roles directly via RLS
+      // Fallback: Query ClashZone_user_roles directly via RLS
       const { data: rolesData, error: rolesErr } = await supabase
-        .from('warzone_user_roles')
+        .from('ClashZone_user_roles')
         .select('*')
         .order('created_at', { ascending: false });
 

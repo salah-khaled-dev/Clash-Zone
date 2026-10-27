@@ -1,7 +1,7 @@
-import React from 'react';
+﻿import React from 'react';
 import { FiSearch, FiRotateCcw, FiFilter, FiShare2, FiTag, FiClock, FiCalendar } from 'react-icons/fi';
 import { translateStatus } from '../utils/translations';
-import { WARZONE_CATEGORIES } from '../types/booking';
+import { ClashZone_CATEGORIES } from '../types/booking';
 import type { BookingDbStatus } from '../types/booking';
 
 interface FilterToolbarProps {
@@ -17,7 +17,7 @@ interface FilterToolbarProps {
   onExport: () => void;
 }
 
-const WARZONE_STATUS_FILTERS: { value: BookingDbStatus | ''; label: string }[] = [
+const ClashZone_STATUS_FILTERS: { value: BookingDbStatus | ''; label: string }[] = [
   { value: '', label: 'كل الحالات' },
   { value: 'pending', label: translateStatus('pending') },
   { value: 'confirmed', label: translateStatus('confirmed') },
@@ -106,7 +106,7 @@ export const FilterToolbar = React.memo<FilterToolbarProps>(({
             onChange={(e) => onStatusChange(e.target.value)}
             className="w-full px-3 h-10 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all cursor-pointer outline-none"
           >
-            {WARZONE_STATUS_FILTERS.map((s) => (
+            {ClashZone_STATUS_FILTERS.map((s) => (
               <option key={s.value} value={s.value}>
                 {s.label}
               </option>
@@ -126,7 +126,7 @@ export const FilterToolbar = React.memo<FilterToolbarProps>(({
             className="w-full px-3 h-10 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all cursor-pointer outline-none"
           >
             <option value="">كل الفئات</option>
-            {WARZONE_CATEGORIES.map(cat => (
+            {ClashZone_CATEGORIES.map(cat => (
               <option key={cat} value={cat}>
                 {cat}
               </option>

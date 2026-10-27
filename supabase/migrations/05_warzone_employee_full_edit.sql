@@ -1,4 +1,4 @@
--- ==============================================================================
+﻿-- ==============================================================================
 -- Migration 05: Grant Employees Full Booking Editing Permissions
 -- ==============================================================================
 -- Purpose:
@@ -17,21 +17,21 @@
 -- 5. Block 'unassigned' and anonymous users from editing or reading bookings.
 -- ==============================================================================
 
--- 1. Helper function: warzone_current_role
-CREATE OR REPLACE FUNCTION public.warzone_current_role()
+-- 1. Helper function: ClashZone_current_role
+CREATE OR REPLACE FUNCTION public.ClashZone_current_role()
 RETURNS text
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT role FROM public.warzone_user_roles
+  SELECT role FROM public.ClashZone_user_roles
   WHERE user_id = auth.uid()
   LIMIT 1;
 $$;
 
--- 2. Helper function: warzone_is_admin
-CREATE OR REPLACE FUNCTION public.warzone_is_admin()
+-- 2. Helper function: ClashZone_is_admin
+CREATE OR REPLACE FUNCTION public.ClashZone_is_admin()
 RETURNS boolean
 LANGUAGE sql
 STABLE
@@ -39,13 +39,13 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
   SELECT EXISTS (
-    SELECT 1 FROM public.warzone_user_roles
+    SELECT 1 FROM public.ClashZone_user_roles
     WHERE user_id = auth.uid() AND role = 'admin'
   );
 $$;
 
--- 3. Helper function: warzone_is_manager_or_admin
-CREATE OR REPLACE FUNCTION public.warzone_is_manager_or_admin()
+-- 3. Helper function: ClashZone_is_manager_or_admin
+CREATE OR REPLACE FUNCTION public.ClashZone_is_manager_or_admin()
 RETURNS boolean
 LANGUAGE sql
 STABLE
@@ -53,7 +53,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
   SELECT EXISTS (
-    SELECT 1 FROM public.warzone_user_roles
+    SELECT 1 FROM public.ClashZone_user_roles
     WHERE user_id = auth.uid() AND role IN ('admin', 'manager')
   );
 $$;
@@ -61,7 +61,7 @@ $$;
 -- 4. Update the Booking Guard Trigger Function
 -- Removes the outdated restriction that limited employees to only date, time, and status.
 -- Now Admin, Manager, and Employee can update all editable booking fields.
-CREATE OR REPLACE FUNCTION public.warzone_guard_booking_updates()
+CREATE OR REPLACE FUNCTION public.ClashZone_guard_booking_updates()
 RETURNS trigger
 LANGUAGE plpgsql
 SET search_path = public
@@ -69,7 +69,7 @@ AS $$
 DECLARE
   v_role TEXT;
 BEGIN
-  v_role := public.warzone_current_role();
+  v_role := public.ClashZone_current_role();
 
   -- Verify user is an authorized staff member
   IF COALESCE(v_role, '') NOT IN ('admin', 'manager', 'employee') THEN
@@ -101,84 +101,84 @@ BEGIN
 END;
 $$;
 
--- Ensure trigger is active on public.warzone_bookings
-DROP TRIGGER IF EXISTS warzone_update_guard ON public.warzone_bookings;
-CREATE TRIGGER warzone_update_guard
-  BEFORE UPDATE ON public.warzone_bookings
+-- Ensure trigger is active on public.ClashZone_bookings
+DROP TRIGGER IF EXISTS ClashZone_update_guard ON public.ClashZone_bookings;
+CREATE TRIGGER ClashZone_update_guard
+  BEFORE UPDATE ON public.ClashZone_bookings
   FOR EACH ROW
-  EXECUTE FUNCTION public.warzone_guard_booking_updates();
+  EXECUTE FUNCTION public.ClashZone_guard_booking_updates();
 
--- 5. Row Level Security for public.warzone_bookings
-ALTER TABLE public.warzone_bookings ENABLE ROW LEVEL SECURITY;
+-- 5. Row Level Security for public.ClashZone_bookings
+ALTER TABLE public.ClashZone_bookings ENABLE ROW LEVEL SECURITY;
 
 -- Drop previous policies to ensure clean updated state
-DROP POLICY IF EXISTS "War Zone Read Bookings" ON public.warzone_bookings;
-DROP POLICY IF EXISTS "War Zone Insert Bookings" ON public.warzone_bookings;
-DROP POLICY IF EXISTS "War Zone Update Bookings" ON public.warzone_bookings;
-DROP POLICY IF EXISTS "War Zone Admin Delete" ON public.warzone_bookings;
-DROP POLICY IF EXISTS "War Zone Select Bookings" ON public.warzone_bookings;
-DROP POLICY IF EXISTS "War Zone Delete Bookings" ON public.warzone_bookings;
+DROP POLICY IF EXISTS "CLASH ZONE Read Bookings" ON public.ClashZone_bookings;
+DROP POLICY IF EXISTS "CLASH ZONE Insert Bookings" ON public.ClashZone_bookings;
+DROP POLICY IF EXISTS "CLASH ZONE Update Bookings" ON public.ClashZone_bookings;
+DROP POLICY IF EXISTS "CLASH ZONE Admin Delete" ON public.ClashZone_bookings;
+DROP POLICY IF EXISTS "CLASH ZONE Select Bookings" ON public.ClashZone_bookings;
+DROP POLICY IF EXISTS "CLASH ZONE Delete Bookings" ON public.ClashZone_bookings;
 
 -- SELECT: Admin, Manager, and Employee can view bookings
-CREATE POLICY "War Zone Select Bookings" ON public.warzone_bookings
+CREATE POLICY "CLASH ZONE Select Bookings" ON public.ClashZone_bookings
 FOR SELECT TO authenticated
 USING (
-  public.warzone_current_role() IN ('admin', 'manager', 'employee')
+  public.ClashZone_current_role() IN ('admin', 'manager', 'employee')
 );
 
 -- INSERT: Admin, Manager, and Employee can create bookings
-CREATE POLICY "War Zone Insert Bookings" ON public.warzone_bookings
+CREATE POLICY "CLASH ZONE Insert Bookings" ON public.ClashZone_bookings
 FOR INSERT TO authenticated
 WITH CHECK (
-  public.warzone_current_role() IN ('admin', 'manager', 'employee')
+  public.ClashZone_current_role() IN ('admin', 'manager', 'employee')
 );
 
 -- UPDATE: Admin, Manager, and Employee can update all editable fields
-CREATE POLICY "War Zone Update Bookings" ON public.warzone_bookings
+CREATE POLICY "CLASH ZONE Update Bookings" ON public.ClashZone_bookings
 FOR UPDATE TO authenticated
 USING (
-  public.warzone_current_role() IN ('admin', 'manager', 'employee')
+  public.ClashZone_current_role() IN ('admin', 'manager', 'employee')
 )
 WITH CHECK (
-  public.warzone_current_role() IN ('admin', 'manager', 'employee')
+  public.ClashZone_current_role() IN ('admin', 'manager', 'employee')
 );
 
 -- DELETE: Strictly Admin and Manager ONLY. Employees CANNOT delete.
-CREATE POLICY "War Zone Delete Bookings" ON public.warzone_bookings
+CREATE POLICY "CLASH ZONE Delete Bookings" ON public.ClashZone_bookings
 FOR DELETE TO authenticated
 USING (
-  public.warzone_is_manager_or_admin()
+  public.ClashZone_is_manager_or_admin()
 );
 
--- 6. Row Level Security for public.warzone_user_roles
-ALTER TABLE public.warzone_user_roles ENABLE ROW LEVEL SECURITY;
+-- 6. Row Level Security for public.ClashZone_user_roles
+ALTER TABLE public.ClashZone_user_roles ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Read own War Zone role" ON public.warzone_user_roles;
-DROP POLICY IF EXISTS "War Zone Admin Manage Roles" ON public.warzone_user_roles;
-DROP POLICY IF EXISTS "War Zone Select User Roles" ON public.warzone_user_roles;
+DROP POLICY IF EXISTS "Read own CLASH ZONE role" ON public.ClashZone_user_roles;
+DROP POLICY IF EXISTS "CLASH ZONE Admin Manage Roles" ON public.ClashZone_user_roles;
+DROP POLICY IF EXISTS "CLASH ZONE Select User Roles" ON public.ClashZone_user_roles;
 
 -- SELECT: Users can read their own role; Admin can read all roles
-CREATE POLICY "War Zone Select User Roles" ON public.warzone_user_roles
+CREATE POLICY "CLASH ZONE Select User Roles" ON public.ClashZone_user_roles
 FOR SELECT TO authenticated
 USING (
-  user_id = auth.uid() OR public.warzone_is_admin()
+  user_id = auth.uid() OR public.ClashZone_is_admin()
 );
 
 -- ALL (INSERT, UPDATE, DELETE): Strictly Admin ONLY
-CREATE POLICY "War Zone Admin Manage Roles" ON public.warzone_user_roles
+CREATE POLICY "CLASH ZONE Admin Manage Roles" ON public.ClashZone_user_roles
 FOR ALL TO authenticated
 USING (
-  public.warzone_is_admin()
+  public.ClashZone_is_admin()
 )
 WITH CHECK (
-  public.warzone_is_admin()
+  public.ClashZone_is_admin()
 );
 
 -- 7. Revoke execution from public and anon on security functions
-REVOKE ALL ON FUNCTION public.warzone_current_role() FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION public.warzone_is_admin() FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION public.warzone_is_manager_or_admin() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.ClashZone_current_role() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.ClashZone_is_admin() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.ClashZone_is_manager_or_admin() FROM PUBLIC, anon;
 
-GRANT EXECUTE ON FUNCTION public.warzone_current_role() TO authenticated;
-GRANT EXECUTE ON FUNCTION public.warzone_is_admin() TO authenticated;
-GRANT EXECUTE ON FUNCTION public.warzone_is_manager_or_admin() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.ClashZone_current_role() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.ClashZone_is_admin() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.ClashZone_is_manager_or_admin() TO authenticated;

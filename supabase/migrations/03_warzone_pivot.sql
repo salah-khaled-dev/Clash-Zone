@@ -1,10 +1,10 @@
--- Migration 03: Transform to War Zone Booking Management System
+﻿-- Migration 03: Transform to CLASH ZONE Booking Management System
 -- Safe, incremental, non-destructive migration preserving existing booking records
 
 -- 1. Add people_count column (positive integer for number of participants)
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS people_count INTEGER DEFAULT 1;
 
--- 2. Add category column for the 7 War Zone booking categories
+-- 2. Add category column for the 7 CLASH ZONE booking categories
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS category TEXT;
 
 -- 3. Backfill existing bookings safely so no data is lost or corrupted
@@ -12,7 +12,7 @@ UPDATE bookings
 SET people_count = 1 
 WHERE people_count IS NULL OR people_count < 1;
 
--- Map previous legacy marketing sources to valid War Zone categories if available, or default to 'عميل جديد'
+-- Map previous legacy marketing sources to valid CLASH ZONE categories if available, or default to 'عميل جديد'
 UPDATE bookings 
 SET category = CASE 
     WHEN customer_source = 'كول سنتر' THEN 'كول سنتر'
@@ -45,7 +45,7 @@ ALTER TABLE bookings ALTER COLUMN vehicle_make DROP NOT NULL;
 ALTER TABLE bookings ALTER COLUMN vehicle_model DROP NOT NULL;
 ALTER TABLE bookings ALTER COLUMN service_type DROP NOT NULL;
 
--- 6. Drop existing category check constraints if any, and add War Zone 7 categories constraint
+-- 6. Drop existing category check constraints if any, and add CLASH ZONE 7 categories constraint
 DO $$
 DECLARE
     r RECORD;

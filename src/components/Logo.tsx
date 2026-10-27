@@ -1,5 +1,5 @@
-import React from 'react';
-import warzoneOfficialBadge from '../assets/warzone_official_badge.webp';
+﻿import React from 'react';
+import ClashZoneOfficialBadge from '../assets/ClashZone_official_badge.webp';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -41,12 +41,12 @@ export const Logo = React.memo<LogoProps>(({
 
   const currentSize = sizeClasses[size];
 
-  // Official War Zone Logo Symbol Emblem
+  // Official CLASH ZONE Logo Symbol Emblem
   const logoSymbol = (
     <div className={`relative flex items-center justify-center flex-shrink-0 bg-[#0c0e14] border border-slate-800/90 rounded-xl shadow-xs overflow-hidden ${currentSize.badge}`}>
       <img
-        src={warzoneOfficialBadge}
-        alt="War Zone Official Logo"
+        src={ClashZoneOfficialBadge}
+        alt="CLASH ZONE Official Logo"
         className="w-full h-full object-contain select-none"
         loading="eager"
       />
@@ -61,7 +61,7 @@ export const Logo = React.memo<LogoProps>(({
     <div className="flex flex-col text-right select-none">
       <div className="flex items-center gap-2">
         <span className={`${currentSize.textAr} text-slate-900 tracking-wider leading-tight`}>
-          WAR ZONE
+          CLASH ZONE
         </span>
         <span className="text-[10px] font-black text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-md leading-none">
           وار زون

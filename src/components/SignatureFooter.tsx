@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Logo } from './Logo';
 
 export interface FooterProps {
@@ -30,12 +30,12 @@ export const SignatureFooter: React.FC<FooterProps> = React.memo(({
       <div className="max-w-[1360px] mx-auto px-5 lg:px-8 py-5 flex flex-col gap-4">
         {/* Main Row */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          {/* Right: War Zone Official Brand Emblem & Subtitle */}
+          {/* Right: CLASH ZONE Official Brand Emblem & Subtitle */}
           <div className="flex items-center gap-3">
             <Logo size="sm" variant="icon-only" />
             <div className="flex flex-col">
               <span className="text-sm font-black text-slate-900 tracking-wider leading-tight">
-                WAR ZONE
+                CLASH ZONE
               </span>
               <span className="text-[11px] text-slate-500 font-medium mt-0.5">
                 نظام إدارة الحجوزات والفعاليات
@@ -85,13 +85,13 @@ export const SignatureFooter: React.FC<FooterProps> = React.memo(({
               rel="noopener noreferrer"
               className="text-[11px] font-bold text-slate-700 hover:text-red-600 transition-colors cursor-pointer"
             >
-             WarZone
+             ClashZone
             </a>
           </div>
 
           {/* Left side in RTL: Copyright & System Subtitle */}
           <div className="flex items-center gap-3 text-slate-400 text-xs">
-            <span>© 2026 War Zone — جميع الحقوق محفوظة</span>
+            <span>© 2026 CLASH ZONE — جميع الحقوق محفوظة</span>
             <span className="hidden sm:inline text-slate-200">•</span>
             <span className="hidden sm:inline text-[11px] font-semibold text-slate-400 tracking-wide" dir="ltr">
               Booking Management System

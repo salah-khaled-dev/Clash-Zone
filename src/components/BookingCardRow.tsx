@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { 
   FiUser, 
   FiClock, 
@@ -73,7 +73,7 @@ export const BookingCardRow = React.memo<BookingCardRowProps>(({
   };
 
   const getWhatsAppLink = () => {
-    const rawMessage = `السلام عليكم،\n\nمعك War Zone.\n\nنود تأكيد حجزكم لعدد ${booking.number_of_people} أفراد بتاريخ ${displayDate}\nالساعة ${displayTime}.\n\nأهلاً بكم في War Zone!`;
+    const rawMessage = `السلام عليكم،\n\nمعك CLASH ZONE.\n\nنود تأكيد حجزكم لعدد ${booking.number_of_people} أفراد بتاريخ ${displayDate}\nالساعة ${displayTime}.\n\nأهلاً بكم في CLASH ZONE!`;
     const encodedMessage = encodeURIComponent(rawMessage);
     
     let cleanPhone = (booking.phone || '').replace(/\D/g, '');

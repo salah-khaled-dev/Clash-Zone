@@ -1,15 +1,15 @@
-import { supabase } from '../lib/supabase';
+﻿import { supabase } from '../lib/supabase';
 import type { Booking, BookingCategory, BookingDbStatus, UserRole, UserProfile } from '../types/booking';
-import { STATUS_DB_MAP, WARZONE_CATEGORIES } from '../types/booking';
+import { STATUS_DB_MAP, ClashZone_CATEGORIES } from '../types/booking';
 import type { Database } from '../types/database';
 import { toPostgresTime } from '../utils/timeSlots';
 
-type WarzoneBookingRow = Database['public']['Tables']['warzone_bookings']['Row'];
-type WarzoneBookingInsert = Database['public']['Tables']['warzone_bookings']['Insert'];
-type WarzoneBookingUpdate = Database['public']['Tables']['warzone_bookings']['Update'];
-type WarzoneBookingFeedRow = Database['public']['Views']['warzone_bookings_feed']['Row'];
+type ClashZoneBookingRow = Database['public']['Tables']['ClashZone_bookings']['Row'];
+type ClashZoneBookingInsert = Database['public']['Tables']['ClashZone_bookings']['Insert'];
+type ClashZoneBookingUpdate = Database['public']['Tables']['ClashZone_bookings']['Update'];
+type ClashZoneBookingFeedRow = Database['public']['Views']['ClashZone_bookings_feed']['Row'];
 
-function normalizeBooking(row: WarzoneBookingRow | WarzoneBookingFeedRow | Record<string, unknown>): Booking {
+function normalizeBooking(row: ClashZoneBookingRow | ClashZoneBookingFeedRow | Record<string, unknown>): Booking {
   const r = row as Record<string, unknown>;
   const parsedPeople = Number(r.number_of_people);
   const numberOfPeople = !isNaN(parsedPeople) && parsedPeople > 0 ? Math.floor(parsedPeople) : 1;
@@ -18,7 +18,7 @@ function normalizeBooking(row: WarzoneBookingRow | WarzoneBookingFeedRow | Recor
   
   const rawCat = typeof r.category === 'string' ? r.category : '';
   const category = (
-    WARZONE_CATEGORIES.includes(rawCat as BookingCategory) 
+    ClashZone_CATEGORIES.includes(rawCat as BookingCategory) 
       ? rawCat 
       : 'عميل جديد'
   ) as BookingCategory;
@@ -46,7 +46,7 @@ function normalizeBooking(row: WarzoneBookingRow | WarzoneBookingFeedRow | Recor
 
 export const bookingsService = {
   /**
-   * Fetch current user's profile and role from public.warzone_user_roles
+   * Fetch current user's profile and role from public.ClashZone_user_roles
    */
   async getCurrentUserProfile(): Promise<UserProfile> {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -55,7 +55,7 @@ export const bookingsService = {
     }
 
     const { data, error } = await supabase
-      .from('warzone_user_roles')
+      .from('ClashZone_user_roles')
       .select('full_name, role, email, is_active, created_at')
       .eq('user_id', user.id)
       .maybeSingle();
@@ -81,7 +81,7 @@ export const bookingsService = {
   },
 
   /**
-   * Fetch current user's role from public.warzone_user_roles
+   * Fetch current user's role from public.ClashZone_user_roles
    */
   async getCurrentUserRole(): Promise<UserRole> {
     const profile = await this.getCurrentUserProfile();
@@ -89,17 +89,17 @@ export const bookingsService = {
   },
 
   /**
-   * Fetch all War Zone bookings from public.warzone_bookings_feed sorted by date and time
+   * Fetch all CLASH ZONE bookings from public.ClashZone_bookings_feed sorted by date and time
    */
   async getBookings(): Promise<Booking[]> {
     const { data, error } = await supabase
-      .from('warzone_bookings_feed')
+      .from('ClashZone_bookings_feed')
       .select('*')
       .order('booking_date', { ascending: true })
       .order('booking_time', { ascending: true });
 
     if (error) {
-      console.error('Error fetching War Zone bookings:', error);
+      console.error('Error fetching CLASH ZONE bookings:', error);
       if (error.code === '42501' || error.message.includes('permission denied')) {
         throw new Error('ليس لديك صلاحية لعرض الحجوزات. يرجى التواصل مع المسؤول.');
       }
@@ -114,7 +114,7 @@ export const bookingsService = {
    */
   async getBookingById(id: string): Promise<Booking | null> {
     const { data, error } = await supabase
-      .from('warzone_bookings_feed')
+      .from('ClashZone_bookings_feed')
       .select('*')
       .eq('id', id)
       .maybeSingle();
@@ -128,12 +128,12 @@ export const bookingsService = {
   },
 
   /**
-   * Create a new War Zone booking in public.warzone_bookings
+   * Create a new CLASH ZONE booking in public.ClashZone_bookings
    */
   async createBooking(booking: Omit<Booking, 'id' | 'created_at' | 'updated_at'>): Promise<Booking> {
     const numberOfPeople = Math.max(1, Math.floor(Number(booking.number_of_people) || 1));
     const rawCategory = booking.category || 'عميل جديد';
-    const category: BookingCategory = WARZONE_CATEGORIES.includes(rawCategory as BookingCategory)
+    const category: BookingCategory = ClashZone_CATEGORIES.includes(rawCategory as BookingCategory)
       ? (rawCategory as BookingCategory)
       : 'عميل جديد';
 
@@ -158,7 +158,7 @@ export const bookingsService = {
 
     const duration = booking.duration_minutes === 60 ? 60 : 30;
 
-    const insertData: WarzoneBookingInsert = {
+    const insertData: ClashZoneBookingInsert = {
       customer_name: booking.customer_name.trim(),
       phone: booking.phone.trim(),
       number_of_people: numberOfPeople,
@@ -171,13 +171,13 @@ export const bookingsService = {
     };
 
     const { data, error } = await supabase
-      .from('warzone_bookings')
+      .from('ClashZone_bookings')
       .insert([insertData])
       .select()
       .single();
 
     if (error) {
-      console.error('Error creating War Zone booking:', error);
+      console.error('Error creating CLASH ZONE booking:', error);
       if (error.code === '42501') {
         throw new Error('ليس لديك صلاحية لإنشاء حجز جديد');
       }
@@ -199,7 +199,7 @@ export const bookingsService = {
     id: string, 
     bookingData: Partial<Omit<Booking, 'id' | 'created_at' | 'updated_at'>>
   ): Promise<Booking> {
-    const updateData: WarzoneBookingUpdate = {
+    const updateData: ClashZoneBookingUpdate = {
       updated_at: new Date().toISOString()
     };
 
@@ -217,7 +217,7 @@ export const bookingsService = {
 
     if (bookingData.category !== undefined) {
       const cat = bookingData.category;
-      updateData.category = WARZONE_CATEGORIES.includes(cat as BookingCategory) ? cat : 'عميل جديد';
+      updateData.category = ClashZone_CATEGORIES.includes(cat as BookingCategory) ? cat : 'عميل جديد';
     }
 
     if (bookingData.booking_date !== undefined) {
@@ -242,7 +242,7 @@ export const bookingsService = {
     }
 
     const { data, error } = await supabase
-      .from('warzone_bookings')
+      .from('ClashZone_bookings')
       .update(updateData)
       .eq('id', id)
       .select()
@@ -319,7 +319,7 @@ export const bookingsService = {
    */
   async deleteBooking(id: string): Promise<boolean> {
     const { error } = await supabase
-      .from('warzone_bookings')
+      .from('ClashZone_bookings')
       .delete()
       .eq('id', id);
 

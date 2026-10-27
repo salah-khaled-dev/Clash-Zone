@@ -1,4 +1,4 @@
-export type BookingDbStatus = 
+﻿export type BookingDbStatus = 
   | 'pending' 
   | 'confirmed' 
   | 'completed' 
@@ -40,7 +40,7 @@ export type BookingCategory =
   | 'إيفنت خارجي'
   | 'مدرسة';
 
-export const WARZONE_CATEGORIES: BookingCategory[] = [
+export const ClashZone_CATEGORIES: BookingCategory[] = [
   'كول سنتر',
   'عميل جديد',
   'عميل سابق',

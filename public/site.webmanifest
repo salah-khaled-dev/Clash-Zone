@@ -1,7 +1,7 @@
-{
-  "name": "War Zone - نظام إدارة الحجوزات والفعاليات",
-  "short_name": "War Zone",
-  "description": "لوحة التحكم وإدارة حجوزات ميادين وفعاليات وأنشطة War Zone",
+﻿{
+  "name": "CLASH ZONE - نظام إدارة الحجوزات والفعاليات",
+  "short_name": "CLASH ZONE",
+  "description": "لوحة التحكم وإدارة حجوزات ميادين وفعاليات وأنشطة CLASH ZONE",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",

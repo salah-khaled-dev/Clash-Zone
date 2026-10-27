@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+﻿import React, { useEffect, useState, useMemo } from 'react';
 import { 
   FiUsers, 
   FiCalendar, 
@@ -12,7 +12,7 @@ import {
   HiOutlineSquares2X2 
 } from 'react-icons/hi2';
 import type { Booking } from '../types/booking';
-import { WARZONE_CATEGORIES } from '../types/booking';
+import { ClashZone_CATEGORIES } from '../types/booking';
 import { getCategoryIcon } from '../utils/translations';
 import { getTodayRiyadhStr } from '../utils/bookingFormatters';
 
@@ -76,9 +76,9 @@ export const StatsSection = React.memo<StatsSectionProps>(({ bookings }) => {
       return acc + (Number(b.number_of_people) || 1);
     }, 0);
 
-    // Categories breakdown for the 7 War Zone categories
+    // Categories breakdown for the 7 CLASH ZONE categories
     const categoryCounts: Record<string, number> = {};
-    WARZONE_CATEGORIES.forEach(cat => {
+    ClashZone_CATEGORIES.forEach(cat => {
       categoryCounts[cat] = 0;
     });
 
@@ -206,21 +206,21 @@ export const StatsSection = React.memo<StatsSectionProps>(({ bookings }) => {
           </div>
         </div>
 
-        {/* War Zone Categories Breakdown */}
+        {/* CLASH ZONE Categories Breakdown */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm lg:col-span-6 flex flex-col gap-4">
           <div className="flex justify-between items-center border-b border-slate-100 pb-3">
             <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
               <FiTrendingUp className="w-4 h-4 text-slate-500" />
-              <span>إحصائيات فئات الحجوزات (War Zone)</span>
+              <span>إحصائيات فئات الحجوزات (CLASH ZONE)</span>
             </h4>
             <span className="text-[11px] font-bold text-red-700 bg-red-50 border border-red-200 px-2.5 py-0.5 rounded-lg">
               الأعلى: {stats.topCategory} {stats.total > 0 ? `(${stats.topCategoryPct}%)` : ''}
             </span>
           </div>
 
-          {/* 7 War Zone Categories List */}
+          {/* 7 CLASH ZONE Categories List */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {WARZONE_CATEGORIES.map(cat => {
+            {ClashZone_CATEGORIES.map(cat => {
               const count = stats.categoryCounts[cat] || 0;
               const pct = stats.total > 0 ? Math.round((count / stats.total) * 100) : 0;
               return (

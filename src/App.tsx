@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+﻿import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   FiCalendar, 
   FiClock, 
@@ -79,7 +79,7 @@ const MainAppContent: React.FC = () => {
     setActiveModal({ type: 'edit', booking });
   }, []);
 
-  // Verify session and fetch role from warzone_user_roles silently and accurately
+  // Verify session and fetch role from ClashZone_user_roles silently and accurately
   const verifySessionAndRole = useCallback(async (currentSession: Session | null) => {
     if (!currentSession?.user) {
       setSession(null);
@@ -93,13 +93,13 @@ const MainAppContent: React.FC = () => {
 
     try {
       const { data, error } = await supabase
-        .from('warzone_user_roles')
+        .from('ClashZone_user_roles')
         .select('role, full_name, is_active')
         .eq('user_id', currentSession.user.id)
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching user profile from warzone_user_roles:', error);
+        console.error('Error fetching user profile from ClashZone_user_roles:', error);
         setAuthErrorMessage('تعذر التحقق من صلاحيات الحساب. يرجى التحقق من اتصالك بالإنترنت والمحاولة مجدداً.');
         setAuthStatus('error');
         return;
@@ -159,7 +159,7 @@ const MainAppContent: React.FC = () => {
     };
   }, [verifySessionAndRole]);
 
-  // Fetch bookings from public.warzone_bookings
+  // Fetch bookings from public.ClashZone_bookings
   const fetchBookings = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -167,14 +167,14 @@ const MainAppContent: React.FC = () => {
       setBookings(data);
     } catch (err: unknown) {
       const e = err as Error;
-      console.error('Error fetching War Zone bookings:', e);
+      console.error('Error fetching CLASH ZONE bookings:', e);
       showToast(e.message || 'حدث خطأ أثناء تحميل بيانات الحجوزات من الخادم', 'error');
     } finally {
       setIsLoading(false);
     }
   }, [showToast]);
 
-  // Load bookings and set up Supabase Realtime on public.warzone_bookings
+  // Load bookings and set up Supabase Realtime on public.ClashZone_bookings
   useEffect(() => {
     if (!session) return;
 
@@ -182,12 +182,12 @@ const MainAppContent: React.FC = () => {
       fetchBookings();
     }, 0);
 
-    // Setup Postgres Realtime Channel for warzone_bookings table
+    // Setup Postgres Realtime Channel for ClashZone_bookings table
     const channel = supabase
-      .channel('realtime-warzone-bookings')
+      .channel('realtime-ClashZone-bookings')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'warzone_bookings' },
+        { event: '*', schema: 'public', table: 'ClashZone_bookings' },
         (payload) => {
           const { eventType, new: newRecord, old: oldRecord } = payload;
           
@@ -332,7 +332,7 @@ const MainAppContent: React.FC = () => {
           );
         });
         setActiveModal({ type: 'success', booking: result });
-        showToast("تم تسجيل وتأكيد الحجز بنجاح في War Zone", "success");
+        showToast("تم تسجيل وتأكيد الحجز بنجاح في CLASH ZONE", "success");
       }
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : '';
@@ -544,7 +544,7 @@ const MainAppContent: React.FC = () => {
   const getWhatsAppLink = (b: Booking) => {
     const displayDate = formatArabicDate(b.booking_date);
     const displayTime = formatArabicTime(b.booking_time, b.duration_minutes);
-    const rawMessage = `السلام عليكم،\n\nمعك War Zone.\n\nنود تأكيد حجزكم لعدد ${b.number_of_people} أفراد بتاريخ ${displayDate}\nالساعة ${displayTime}.\n\nأهلاً بكم في War Zone!`;
+    const rawMessage = `السلام عليكم،\n\nمعك CLASH ZONE.\n\nنود تأكيد حجزكم لعدد ${b.number_of_people} أفراد بتاريخ ${displayDate}\nالساعة ${displayTime}.\n\nأهلاً بكم في CLASH ZONE!`;
     const encodedMessage = encodeURIComponent(rawMessage);
     
     let cleanPhone = (b.phone || '').replace(/\D/g, '');
