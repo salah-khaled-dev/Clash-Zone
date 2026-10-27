@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import ClashZoneOfficialBadge from '../assets/ClashZone_official_badge.webp';
 
 interface LogoProps {
@@ -64,7 +64,7 @@ export const Logo = React.memo<LogoProps>(({
           CLASH ZONE
         </span>
         <span className="text-[10px] font-black text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-md leading-none">
-          وار زون
+          Laser Tag
         </span>
       </div>
       <span className={`${currentSize.textEn} font-bold text-slate-500 tracking-wide mt-0.5 leading-none`}>

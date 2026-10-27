@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { FiMail, FiLock, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 import { supabase } from '../lib/supabase';
 import { useToast } from './useToast';
@@ -133,7 +133,7 @@ export const LoginScreen = React.memo<LoginScreenProps>(({ onLoginSuccess }) => 
                     CLASH ZONE
                   </span>
                   <span className="text-[10px] font-black text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-md">
-                    وار زون
+                    Laser Tag
                   </span>
                 </div>
                 <span className="text-xs font-semibold text-slate-500 mt-0.5">
