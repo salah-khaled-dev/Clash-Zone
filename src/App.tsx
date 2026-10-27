@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   FiCalendar, 
   FiClock, 
@@ -93,13 +93,13 @@ const MainAppContent: React.FC = () => {
 
     try {
       const { data, error } = await supabase
-        .from('ClashZone_user_roles')
+        .from('warzone_user_roles')
         .select('role, full_name, is_active')
         .eq('user_id', currentSession.user.id)
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching user profile from ClashZone_user_roles:', error);
+        console.error('Error fetching user profile from warzone_user_roles:', error);
         setAuthErrorMessage('تعذر التحقق من صلاحيات الحساب. يرجى التحقق من اتصالك بالإنترنت والمحاولة مجدداً.');
         setAuthStatus('error');
         return;
@@ -182,12 +182,12 @@ const MainAppContent: React.FC = () => {
       fetchBookings();
     }, 0);
 
-    // Setup Postgres Realtime Channel for ClashZone_bookings table
+    // Setup Postgres Realtime Channel for warzone_bookings table
     const channel = supabase
-      .channel('realtime-ClashZone-bookings')
+      .channel('realtime-warzone-bookings')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'ClashZone_bookings' },
+        { event: '*', schema: 'public', table: 'warzone_bookings' },
         (payload) => {
           const { eventType, new: newRecord, old: oldRecord } = payload;
           

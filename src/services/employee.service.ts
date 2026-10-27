@@ -1,4 +1,4 @@
-﻿import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 
 export interface EmployeeAccount {
   user_id: string;
@@ -10,9 +10,9 @@ export interface EmployeeAccount {
   is_disabled: boolean;
 }
 
-function parseErrorMessage(err: any): string {
+function parseErrorMessage(err: unknown): string {
   if (!err) return 'حدث خطأ غير متوقع';
-  const raw = typeof err === 'string' ? err : err.message || JSON.stringify(err);
+  const raw = typeof err === 'string' ? err : (err as { message?: string })?.message || JSON.stringify(err);
 
   if (raw.includes('Failed to send a request to the Edge Function') || raw.includes('Failed to fetch')) {
     return 'فشل الاتصال بالدالة السحابية. يرجى التحقق من اتصال الإنترنت.';

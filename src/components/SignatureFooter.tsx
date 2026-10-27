@@ -85,7 +85,7 @@ export const SignatureFooter: React.FC<FooterProps> = React.memo(({
               rel="noopener noreferrer"
               className="text-[11px] font-bold text-slate-700 hover:text-red-600 transition-colors cursor-pointer"
             >
-             ClashZone
+             Salah-Khaled
             </a>
           </div>
 

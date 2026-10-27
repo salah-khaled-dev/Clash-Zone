@@ -140,7 +140,7 @@ export const BookingForm = React.memo<BookingFormProps>(({ onSubmitBooking }) =>
             required
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
-            placeholder=" مثال : حسام مهدي "
+            placeholder=" مثال : علي خالد  "
             className="w-full px-3.5 h-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 placeholder-slate-400 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all outline-none"
           />
         </div>

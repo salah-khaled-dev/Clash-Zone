@@ -74,7 +74,10 @@ export const EmployeeManagement: React.FC<EmployeeManagementProps> = ({
   }, [showToast]);
 
   useEffect(() => {
-    fetchEmployees();
+    const timer = setTimeout(() => {
+      fetchEmployees();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchEmployees]);
 
   const handleCreateEmployee = async (e: React.FormEvent) => {

@@ -53,7 +53,7 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({
   const [isOpen, setIsOpen] = useState(false);
 
   // Floating UI handles precise viewport positioning, flip, shift, and auto-update
-  const { refs, floatingStyles, context } = useFloating({
+  const { refs: { setReference, setFloating }, floatingStyles, context } = useFloating({
     open: isOpen,
     onOpenChange: setIsOpen,
     placement: 'bottom-end',
@@ -96,7 +96,7 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({
   return (
     <div className="relative inline-block text-right">
       <button
-        ref={refs.setReference}
+        ref={setReference}
         type="button"
         {...getReferenceProps()}
         aria-haspopup="menu"
@@ -115,7 +115,7 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({
         <FloatingPortal>
           <FloatingFocusManager context={context} modal={false}>
             <div
-              ref={refs.setFloating}
+              ref={setFloating}
               style={{ ...floatingStyles, zIndex: 9999 }}
               {...getFloatingProps()}
               className="outline-none"
